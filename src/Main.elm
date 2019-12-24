@@ -309,7 +309,7 @@ viewHeadder =
     div []
         [ nav [ class "header-nav" ]
             [ ul []
-                [ li [] [ a [ href "./" ] [ span [ class "header-nav__top" ] [ text "タイピング部" ] ] ]
+                [ li [] [ a [ href "./" ] [ span [ class "header-nav__top" ] [ text "タイピング部(β)" ] ] ]
                 , li [] [ a [ href "./#list" ] [ span [] [ text "お題リスト" ] ] ]
                 , li [] [ a [ href "./#post" ] [ span [] [ text "お題投稿" ] ] ]
                 , li [] [ a [ href "./#user" ] [ span [] [ text "ユーザー" ] ] ]
