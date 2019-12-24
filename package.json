@@ -1,0 +1,16 @@
+{
+  "devDependencies": {
+    "cssnano": "^4.1.10",
+    "elm-hot": "^1.0.1",
+    "node-elm-compiler": "^5.0.3"
+  },
+  "dependencies": {
+    "style.css": "^1.0.0"
+  },
+  "scripts": {
+    "clean": "del .\\dist\\*.*",
+    "dev:remort": "npm run clean && parcel index.html --public-url ./",
+    "dev": "parcel index.html",
+    "build": "npm run clean && parcel build index.html --public-url ./"
+  }
+}
