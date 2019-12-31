@@ -1,5 +1,6 @@
 module Data.LongWord exposing (..)
 
+import Dict exposing (Dict)
 import Http
 import Json.Decode as D
 import Json.Encode as E
@@ -63,6 +64,14 @@ encodeScore v =
         , ( "keys", E.int v.keys )
         , ( "miss", E.int v.miss )
         ]
+
+
+scoreDecoder : D.Decoder Score
+scoreDecoder =
+    D.map3 Score
+        (D.field "time" D.int)
+        (D.field "keys" D.int)
+        (D.field "miss" D.int)
 
 
 validate : LongWord -> Bool

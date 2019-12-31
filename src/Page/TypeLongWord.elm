@@ -42,7 +42,6 @@ routeParser =
 type alias Model =
     { modelState : ModelState
     , typingState : TypingState
-    , wordID : Maybe Int
     , inputHistory : String
     , typingData : Maybe Typing.Data
     , wordForView : String
@@ -52,7 +51,8 @@ type alias Model =
     , finishTime : Time.Posix
     , bestScore : Maybe Score
     , scoreHistory : List Score
-    , serverMSG : String
+    , notice : String
+    , ranking : Maybe API.LongWordRanking
     }
 
 
@@ -87,7 +87,6 @@ init env =
     ( Model
         Init
         Waiting
-        id
         ""
         Nothing
         ""
@@ -98,6 +97,7 @@ init env =
         Nothing
         []
         ""
+        Nothing
     , case id of
         Just wid ->
             API.getLongWord ReceiveLongWord wid
@@ -154,6 +154,13 @@ type Msg
     | ReceiveDeleteWord (Result Http.Error String)
     | RegistRanking
     | ReceiveRegistRanking (Result Http.Error String)
+    | GetRanking
+    | ReceiveGetRanking (Result Http.Error API.LongWordRanking)
+
+
+run : msg -> Cmd msg
+run m =
+    Task.perform (always m) (Task.succeed ())
 
 
 update : Msg -> Model -> Env -> ( Model, Cmd Msg, Env )
@@ -165,7 +172,7 @@ update msg model env =
                 , typingData = Just (Typing.newData lw.wordForInput)
                 , wordForView = lw.wordForView
               }
-            , Cmd.none
+            , run GetRanking
             , env
             )
 
@@ -312,32 +319,49 @@ update msg model env =
             )
 
         DeleteWord ->
-            case model.wordID of
-                Just wid ->
-                    ( model, API.deleteLongWord ReceiveDeleteWord env.user wid, env )
+            case model.modelState of
+                Loaded lw ->
+                    ( model, API.deleteLongWord ReceiveDeleteWord env.user lw.id, env )
 
-                Nothing ->
+                _ ->
                     ( model, Cmd.none, env )
 
         ReceiveDeleteWord (Ok str) ->
-            ( { model | serverMSG = str }, Cmd.none, env )
+            ( { model | notice = str }, Cmd.none, env )
 
         ReceiveDeleteWord (Err str) ->
-            ( { model | serverMSG = "エラー" }, Cmd.none, env )
+            ( { model | notice = "エラー" }, Cmd.none, env )
 
         RegistRanking ->
-            case ( model.wordID, model.bestScore ) of
-                ( Just wid, Just score ) ->
-                    ( model, API.registLongWordRanking ReceiveRegistRanking env.user wid score, env )
+            case ( model.modelState, model.bestScore ) of
+                ( Loaded lw, Just score ) ->
+                    ( model, API.registLongWordRanking ReceiveRegistRanking env.user lw.id score, env )
+
+                ( _, Nothing ) ->
+                    ( { model | notice = "送るスコアがありません" }, Cmd.none, env )
 
                 ( _, _ ) ->
-                    ( model, Cmd.none, env )
+                    ( { model | notice = "エラー" }, Cmd.none, env )
 
         ReceiveRegistRanking (Ok str) ->
-            ( { model | serverMSG = str }, Cmd.none, env )
+            ( { model | notice = str }, Cmd.none, env )
 
         ReceiveRegistRanking (Err str) ->
-            ( { model | serverMSG = "エラー" }, Cmd.none, env )
+            ( { model | notice = "エラー" }, Cmd.none, env )
+
+        GetRanking ->
+            case model.modelState of
+                Loaded lw ->
+                    ( model, API.getLongWordRanking ReceiveGetRanking env.user lw.id, env )
+
+                _ ->
+                    ( model, Cmd.none, env )
+
+        ReceiveGetRanking (Ok lwr) ->
+            ( { model | ranking = Just lwr }, Cmd.none, env )
+
+        ReceiveGetRanking (Err e) ->
+            ( { model | notice = "ランキング取得失敗" }, Cmd.none, env )
 
 
 
@@ -432,11 +456,12 @@ view model =
             ]
         , div [ class "element-panel" ]
             [ button [ onClick RegistRanking ] [ text "ランキング登録" ]
+            , button [ onClick GetRanking ] [ text "ランキング取得" ]
             , button [ onClick DeleteWord ] [ text "ワード削除" ]
-            , div [] [ text model.serverMSG ]
+            , div [] [ text model.notice ]
             ]
         , div [ class "element-panel" ]
-            []
+            [ viewRankingList model.ranking ]
         ]
 
 
@@ -460,26 +485,96 @@ keyDecoder =
 ---- PROGRAM ----
 
 
+type alias UsefulScore =
+    { time : String
+    , miss : String
+    , accuracy : String
+    , kpm : String
+    }
+
+
+scoreToUsefulScore : Score -> UsefulScore
+scoreToUsefulScore score =
+    let
+        time =
+            toFloat score.time / 1000
+
+        ac =
+            (toFloat score.keys - toFloat score.miss) / toFloat score.keys * 100
+
+        kpm =
+            toFloat score.keys / (time / 60)
+    in
+    { time = Round.round 2 time
+    , miss = String.fromInt score.miss
+    , accuracy = Round.round 2 ac
+    , kpm = Round.round 2 kpm
+    }
+
+
+viewRanking : API.LongWordRankingScore -> Html msg
+viewRanking score =
+    let
+        us =
+            scoreToUsefulScore score.score
+    in
+    tr
+        [ class
+            (if score.your then
+                "ranking-table__you"
+
+             else
+                ""
+            )
+        ]
+        [ td [] [ text (String.fromInt score.rank) ]
+        , td [] [ text score.name ]
+        , td [] [ text us.time ]
+        , td [] [ text us.miss ]
+        , td [] [ text us.accuracy ]
+        , td [] [ text us.kpm ]
+        ]
+
+
+viewRankingList : Maybe API.LongWordRanking -> Html msg
+viewRankingList lwr =
+    case lwr of
+        Nothing ->
+            div [] []
+
+        Just ranking ->
+            let
+                rl =
+                    List.map (\n -> viewRanking n) ranking
+            in
+            table [ class "ranking-table" ]
+                [ thead []
+                    [ th [] [ text "順位" ]
+                    , th [] [ text "名前" ]
+                    , th [] [ text "タイム" ]
+                    , th [] [ text "miss" ]
+                    , th [] [ text "正確性" ]
+                    , th [] [ text "kpm" ]
+                    ]
+                , tbody []
+                    rl
+                ]
+
+
 viewScore : Maybe Score -> Html msg
 viewScore mscore =
     case mscore of
         Just score ->
             let
-                time =
-                    toFloat score.time / 1000
-
-                ac =
-                    (toFloat score.keys - toFloat score.miss) / toFloat score.keys * 100
-
-                kpm =
-                    toFloat score.keys / (time / 60)
+                us =
+                    scoreToUsefulScore score
             in
             div
                 [ class "typing-score__body" ]
-                [ text (Round.round 2 time ++ "秒, ")
-                , text (String.fromInt score.miss ++ "ミス, ")
-                , text (Round.round 2 ac ++ "%, ")
-                , text (Round.round 2 kpm ++ "打/分")
+                [ text (us.time ++ "秒, ")
+                , text (us.miss ++ "ミス, ")
+                , text (us.accuracy ++ "%, ")
+                , text (us.kpm ++ "打/分")
                 ]
 
         Nothing ->

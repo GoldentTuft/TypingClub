@@ -147,7 +147,7 @@ text-align:left;
 }
 
 .word-summary:hover {
-  background-color: #D7BB8E;
+  background-color: #FFF8E8;
 }
 
 .word-summary__by {
@@ -171,4 +171,25 @@ text-align:left;
 
 .normal-sentence {
   text-align: left;
+}
+
+.ranking-table  {
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: 100%;
+}
+
+.ranking-table th {
+  border-bottom: 2px solid gray;
+}
+
+.ranking-table td {
+  padding-left: 1em;
+  padding-right: 1em;
+  padding: 8px;
+  border-bottom: 1px solid gray;
+}
+
+.ranking-table__you {
+  background-color: #FFF8E8;
 }
