@@ -8,11 +8,8 @@ import Json.Encode as E
 
 
 host =
-    "https://pokosuko.work/typing1"
-
-
-
---"."
+    --"https://pokosuko.work/typing1"
+    "."
 
 
 api =

@@ -135,6 +135,7 @@ reset model env =
 
                         Loaded lw ->
                             lw.wordForView
+                , ranking = model.ranking
               }
             , Cmd.none
             , env
@@ -553,7 +554,7 @@ viewRankingList lwr =
                     , th [] [ text "名前" ]
                     , th [] [ text "タイム" ]
                     , th [] [ text "miss" ]
-                    , th [] [ text "正確性" ]
+                    , th [] [ text "正確率" ]
                     , th [] [ text "kpm" ]
                     ]
                 , tbody []

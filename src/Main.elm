@@ -43,6 +43,7 @@ main =
 type alias Model =
     { env : Env
     , page : Page
+    , postLongWordPageCache : Maybe Page.PostLongWord.Model
     }
 
 
@@ -67,6 +68,7 @@ init flags url key =
         model =
             { env = env
             , page = NotFound
+            , postLongWordPageCache = Nothing
             }
 
         ( m, c ) =
@@ -162,7 +164,7 @@ update msg model =
                 ( newModel, topCmd, newEnv ) =
                     Page.PostLongWord.update subMsg subModel model.env
             in
-            ( { model | env = newEnv, page = PostLongWordPage newModel }
+            ( { model | env = newEnv, page = PostLongWordPage newModel, postLongWordPageCache = Just newModel }
             , Cmd.map PostLongWordMsg topCmd
             )
 
@@ -194,57 +196,65 @@ goTo url model =
         pEnv =
             model.env
 
-        env =
+        newEnv =
             { pEnv | url = url }
+
+        newModel =
+            { model | env = newEnv }
     in
-    case env.url.fragment of
+    case newEnv.url.fragment of
         Just "post" ->
             let
                 ( pageModel, pageCmd ) =
-                    Page.PostLongWord.init env
+                    case model.postLongWordPageCache of
+                        Just cm ->
+                            ( cm, Cmd.none )
+
+                        Nothing ->
+                            Page.PostLongWord.init newEnv
             in
-            ( Model env (PostLongWordPage pageModel)
+            ( { newModel | page = PostLongWordPage pageModel }
             , Cmd.map PostLongWordMsg pageCmd
             )
 
         Just "user" ->
             let
                 ( pageModel, pageCmd ) =
-                    Page.User.init env
+                    Page.User.init newEnv
             in
-            ( Model env (UserPage pageModel)
+            ( { newModel | page = UserPage pageModel }
             , Cmd.map UserMsg pageCmd
             )
 
         Just "list" ->
             let
                 ( pageModel, pageCmd ) =
-                    Page.WordList.init env
+                    Page.WordList.init newEnv
             in
-            ( Model env (WordListPage pageModel)
+            ( { newModel | page = WordListPage pageModel }
             , Cmd.map WordListMsg pageCmd
             )
 
         Just "typeLongWord" ->
             let
                 ( pageModel, pageCmd ) =
-                    Page.TypeLongWord.init env
+                    Page.TypeLongWord.init newEnv
             in
-            ( Model env (TypeLongWordPage pageModel)
+            ( { newModel | page = TypeLongWordPage pageModel }
             , Cmd.map TypeLongWordMsg pageCmd
             )
 
         Nothing ->
             let
                 ( pageModel, pageCmd ) =
-                    Page.TypeLongWord.init env
+                    Page.TypeLongWord.init newEnv
             in
-            ( Model env (TypeLongWordPage pageModel)
+            ( { newModel | page = TypeLongWordPage pageModel }
             , Cmd.map TypeLongWordMsg pageCmd
             )
 
         _ ->
-            ( Model env NotFound, Cmd.none )
+            ( model, Cmd.none )
 
 
 
