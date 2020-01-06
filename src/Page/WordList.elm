@@ -69,7 +69,7 @@ view model =
                 viewWordList wl
 
             Error e ->
-                text ""
+                text "ロード失敗"
         ]
 
 

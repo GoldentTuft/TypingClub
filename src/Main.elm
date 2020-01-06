@@ -269,6 +269,9 @@ subscriptions model =
                 TypeLongWordPage subModel ->
                     Sub.map TypeLongWordMsg Page.TypeLongWord.subscriptions
 
+                PostLongWordPage subModel ->
+                    Sub.map PostLongWordMsg (Page.PostLongWord.subscriptions subModel)
+
                 _ ->
                     Sub.none
 

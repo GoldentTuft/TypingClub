@@ -1,4 +1,4 @@
-module Page.TypeLongWord exposing (Model, Msg, init, subscriptions, update, view)
+module Page.TypeLongWord exposing (Model, Msg, init, initInTrial, subscriptions, update, view, viewTyping)
 
 import API
 import Browser.Events exposing (onKeyDown)
@@ -31,7 +31,7 @@ type Route
 routeParser : Parser (Route -> a) a
 routeParser =
     oneOf
-        [ map Top (top <?> Q.int "id")
+        [ Url.Parser.map Top (top <?> Q.int "id")
         ]
 
 
@@ -60,6 +60,7 @@ type ModelState
     = Init
     | Loaded LongWord.LongWord
     | Error String
+    | Trial LongWord.LongWord
 
 
 type TypingState
@@ -107,6 +108,37 @@ init env =
     )
 
 
+initInTrial : String -> String -> ( Model, Cmd Msg )
+initInTrial wordForView wordForInput =
+    let
+        typingData =
+            Just (Typing.newData wordForInput)
+
+        lw =
+            { title = "Trial"
+            , id = -1
+            , wordForView = wordForView
+            , wordForInput = wordForInput
+            }
+    in
+    ( Model
+        (Trial lw)
+        Waiting
+        ""
+        typingData
+        wordForView
+        0
+        False
+        (Time.millisToPosix 0)
+        (Time.millisToPosix 0)
+        Nothing
+        []
+        ""
+        Nothing
+    , Cmd.none
+    )
+
+
 reset : Model -> Env -> ( Model, Cmd Msg, Env )
 reset model env =
     case init env of
@@ -125,6 +157,9 @@ reset model env =
 
                         Loaded lw ->
                             Just (Typing.newData lw.wordForInput)
+
+                        Trial lw ->
+                            Just (Typing.newData lw.wordForInput)
                 , wordForView =
                     case model.modelState of
                         Init ->
@@ -134,6 +169,9 @@ reset model env =
                             ""
 
                         Loaded lw ->
+                            lw.wordForView
+
+                        Trial lw ->
                             lw.wordForView
                 , ranking = model.ranking
               }
@@ -191,7 +229,10 @@ update msg model env =
                 ( Loaded _, Nothing ) ->
                     ( model, Cmd.none, env )
 
-                ( Loaded _, Just typingData ) ->
+                ( Trial _, Nothing ) ->
+                    ( model, Cmd.none, env )
+
+                ( _, Just typingData ) ->
                     case key of
                         "Shift" ->
                             ( model, Cmd.none, env )
@@ -373,96 +414,27 @@ view : Model -> Html Msg
 view model =
     div []
         [ div [ class "element-panel" ]
-            [ case ( model.modelState, model.typingData ) of
-                ( Init, _ ) ->
-                    div [] [ text "準備中" ]
-
-                ( Error str, _ ) ->
-                    div [] [ text ("エラー: " ++ str) ]
-
-                ( Loaded _, Nothing ) ->
-                    div [] [ text "データ解釈失敗" ]
-
-                ( Loaded _, Just typingData ) ->
-                    div []
-                        [ div
-                            [ class
-                                (if model.missed then
-                                    "typing-form__missed"
-
-                                 else
-                                    "typing-form"
-                                )
-                            ]
-                            [ div [ class "typing-form__body" ]
-                                [ div [ class "typing-form__words" ]
-                                    [ span [ class "typing-form__fixed" ]
-                                        [ text
-                                            (String.left
-                                                (String.length typingData.fixedWords)
-                                                model.wordForView
-                                                |> String.replace "ζ" ""
-                                            )
-                                        ]
-                                    , span [ class "typing-form__rest " ]
-                                        [ text
-                                            (String.dropLeft
-                                                (String.length typingData.fixedWords)
-                                                model.wordForView
-                                                |> String.replace "ζ" ""
-                                            )
-                                        ]
-                                    ]
-                                , div [ class "typing-form__input" ]
-                                    [ text
-                                        (if String.length model.inputHistory > 30 then
-                                            String.right 30 model.inputHistory
-
-                                         else
-                                            model.inputHistory
-                                        )
-                                    ]
-                                , div
-                                    [ class
-                                        (if model.typingState == Finish then
-                                            "typing-form__state__finish"
-
-                                         else
-                                            "typing-form__state"
-                                        )
-                                    ]
-                                    [ text
-                                        ("ミス数: "
-                                            ++ String.fromInt model.miss
-                                            ++ (if model.typingState == Finish then
-                                                    ", "
-                                                        ++ calcAccuracy model.miss (String.length model.inputHistory)
-                                                        ++ "%, "
-                                                        ++ calcSec model.startTime model.finishTime
-                                                        ++ "秒, "
-                                                        ++ calcKpm model.startTime model.finishTime (String.length model.inputHistory)
-                                                        ++ "打/分, "
-                                                        ++ "    Finish"
-
-                                                else
-                                                    ""
-                                               )
-                                        )
-                                    ]
-                                ]
-                            ]
-                        , viewBestScore model.bestScore
-                        , viewScoreHistory model.scoreHistory
-                        ]
-            ]
+            [ viewTyping model ]
         , div [ class "element-panel" ]
-            [ button [ onClick RegistRanking ] [ text "ランキング登録" ]
-            , button [ onClick GetRanking ] [ text "ランキング取得" ]
-            , button [ onClick DeleteWord ] [ text "ワード削除" ]
-            , div [] [ text model.notice ]
-            ]
+            (case model.modelState of
+                Loaded _ ->
+                    [ button [ onClick RegistRanking ] [ text "ランキング登録" ]
+                    , button [ onClick GetRanking ] [ text "ランキング取得" ]
+                    , button [ onClick DeleteWord ] [ text "ワード削除" ]
+                    , div [] [ text model.notice ]
+                    ]
+
+                _ ->
+                    [ text model.notice ]
+            )
         , div [ class "element-panel" ]
-            [ viewRankingList model.ranking ]
+            (case model.modelState of
+                Loaded _ ->
+                    [ viewRankingList model.ranking ]
+
+                _ ->
+                    [ text "" ]
+            )
         ]
 
 
@@ -580,6 +552,103 @@ viewScore mscore =
 
         Nothing ->
             div [] []
+
+
+viewTyping : Model -> Html msg
+viewTyping model =
+    case ( model.modelState, model.typingData ) of
+        ( Init, _ ) ->
+            div [] [ text "準備中" ]
+
+        ( Error str, _ ) ->
+            div [] [ text ("エラー: " ++ str) ]
+
+        ( _, Nothing ) ->
+            div [] [ text "データ解釈失敗" ]
+
+        ( Loaded _, Just typingData ) ->
+            div []
+                [ viewText model typingData
+                , viewBestScore model.bestScore
+                , viewScoreHistory model.scoreHistory
+                ]
+
+        ( Trial _, Just typingData ) ->
+            div []
+                [ viewText model typingData
+                , viewBestScore model.bestScore
+                , viewScoreHistory model.scoreHistory
+                ]
+
+
+viewText : Model -> Typing.Data -> Html msg
+viewText model typingData =
+    div
+        [ class
+            (if model.missed then
+                "typing-form__missed"
+
+             else
+                "typing-form"
+            )
+        ]
+        [ div [ class "typing-form__body" ]
+            [ div [ class "typing-form__words" ]
+                [ span [ class "typing-form__fixed" ]
+                    [ text
+                        (String.left
+                            (String.length typingData.fixedWords)
+                            model.wordForView
+                            |> String.replace "ζ" ""
+                        )
+                    ]
+                , span [ class "typing-form__rest " ]
+                    [ text
+                        (String.dropLeft
+                            (String.length typingData.fixedWords)
+                            model.wordForView
+                            |> String.replace "ζ" ""
+                        )
+                    ]
+                ]
+            , div [ class "typing-form__input" ]
+                [ text
+                    (if String.length model.inputHistory > 30 then
+                        String.right 30 model.inputHistory
+
+                     else
+                        model.inputHistory
+                    )
+                ]
+            , div
+                [ class
+                    (if model.typingState == Finish then
+                        "typing-form__state__finish"
+
+                     else
+                        "typing-form__state"
+                    )
+                ]
+                [ text
+                    ("ミス数: "
+                        ++ String.fromInt model.miss
+                        ++ (if model.typingState == Finish then
+                                ", "
+                                    ++ calcAccuracy model.miss (String.length model.inputHistory)
+                                    ++ "%, "
+                                    ++ calcSec model.startTime model.finishTime
+                                    ++ "秒, "
+                                    ++ calcKpm model.startTime model.finishTime (String.length model.inputHistory)
+                                    ++ "打/分, "
+                                    ++ "    Finish"
+
+                            else
+                                ""
+                           )
+                    )
+                ]
+            ]
+        ]
 
 
 viewBestScore : Maybe Score -> Html msg
