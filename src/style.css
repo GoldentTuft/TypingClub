@@ -193,3 +193,20 @@ text-align:left;
 .ranking-table__you {
   background-color: #FFF8E8;
 }
+
+.wrap-lines {
+  display: inline-block;
+}
+
+.wrap-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.wrap-line__left {
+}
+
+.wrap-line__right {
+  font-size: 2em;
+}

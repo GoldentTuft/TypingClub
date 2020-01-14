@@ -10,8 +10,10 @@ import Html.Attributes exposing (..)
 import Http
 import Json.Decode as D
 import Json.Encode as E
+import Page.Etc
 import Page.PostLongWord
 import Page.Top
+import Page.TypeAny
 import Page.TypeLongWord
 import Page.User
 import Page.WordList
@@ -54,6 +56,8 @@ type Page
     | PostLongWordPage Page.PostLongWord.Model
     | WordListPage Page.WordList.Model
     | TypeLongWordPage Page.TypeLongWord.Model
+    | EtcPage Page.Etc.Model
+    | TypeAnyPage Page.TypeAny.Model
 
 
 init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
@@ -91,6 +95,8 @@ type Msg
     | PostLongWordMsg Page.PostLongWord.Msg
     | WordListMsg Page.WordList.Msg
     | TypeLongWordMsg Page.TypeLongWord.Msg
+    | EtcMsg Page.Etc.Msg
+    | TypeAnyMsg Page.TypeAny.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -186,6 +192,24 @@ update msg model =
             , Cmd.map TypeLongWordMsg topCmd
             )
 
+        ( TypeAnyMsg subMsg, TypeAnyPage subModel ) ->
+            let
+                ( newModel, topCmd, newEnv ) =
+                    Page.TypeAny.update subMsg subModel model.env
+            in
+            ( { model | env = newEnv, page = TypeAnyPage newModel }
+            , Cmd.map TypeAnyMsg topCmd
+            )
+
+        ( EtcMsg subMsg, EtcPage subModel ) ->
+            let
+                ( newModel, topCmd, newEnv ) =
+                    Page.Etc.update subMsg subModel model.env
+            in
+            ( { model | env = newEnv, page = EtcPage newModel }
+            , Cmd.map EtcMsg topCmd
+            )
+
         ( _, _ ) ->
             ( model, Cmd.none )
 
@@ -244,6 +268,24 @@ goTo url model =
             , Cmd.map TypeLongWordMsg pageCmd
             )
 
+        Just "etc" ->
+            let
+                ( pageModel, pageCmd ) =
+                    Page.Etc.init newEnv
+            in
+            ( { newModel | page = EtcPage pageModel }
+            , Cmd.map EtcMsg pageCmd
+            )
+
+        Just "typeAny" ->
+            let
+                ( pageModel, pageCmd ) =
+                    Page.TypeAny.init newEnv
+            in
+            ( { newModel | page = TypeAnyPage pageModel }
+            , Cmd.map TypeAnyMsg pageCmd
+            )
+
         Nothing ->
             let
                 ( pageModel, pageCmd ) =
@@ -271,6 +313,9 @@ subscriptions model =
 
                 PostLongWordPage subModel ->
                     Sub.map PostLongWordMsg (Page.PostLongWord.subscriptions subModel)
+
+                TypeAnyPage subModel ->
+                    Sub.map TypeAnyMsg Page.TypeAny.subscriptions
 
                 _ ->
                     Sub.none
@@ -313,6 +358,14 @@ view model =
             TypeLongWordPage subModel ->
                 Page.TypeLongWord.view subModel
                     |> Html.map TypeLongWordMsg
+
+            EtcPage subModel ->
+                Page.Etc.view subModel
+                    |> Html.map EtcMsg
+
+            TypeAnyPage subModel ->
+                Page.TypeAny.view subModel
+                    |> Html.map TypeAnyMsg
         ]
     }
 
@@ -326,6 +379,7 @@ viewHeadder =
                 , li [] [ a [ href "./#list" ] [ span [] [ text "お題リスト" ] ] ]
                 , li [] [ a [ href "./#post" ] [ span [] [ text "お題投稿" ] ] ]
                 , li [] [ a [ href "./#user" ] [ span [] [ text "ユーザー" ] ] ]
+                , li [] [ a [ href "./#etc" ] [ span [] [ text "etc" ] ] ]
                 ]
             ]
         ]
