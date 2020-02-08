@@ -5,12 +5,14 @@
     "node-elm-compiler": "^5.0.4"
   },
   "dependencies": {
+    "elm-test": "^0.19.1-revision2",
     "style.css": "^1.0.0"
   },
   "scripts": {
     "clean": "del .\\dist\\*.*",
     "dev:remort": "npm run clean && parcel index.html --public-url ./",
     "dev": "parcel index.html",
-    "build": "npm run clean && parcel build index.html --public-url ./"
+    "build": "npm run clean && parcel build index.html --public-url ./",
+    "test": "elm-test"
   }
 }

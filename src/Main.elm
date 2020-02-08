@@ -15,6 +15,7 @@ import Page.PostLongWord
 import Page.Top
 import Page.TypeAny
 import Page.TypeLongWord
+import Page.TypeShortWord
 import Page.User
 import Page.WordList
 import Ports
@@ -58,6 +59,7 @@ type Page
     | TypeLongWordPage Page.TypeLongWord.Model
     | EtcPage Page.Etc.Model
     | TypeAnyPage Page.TypeAny.Model
+    | TypeShortWordPage Page.TypeShortWord.Model
 
 
 init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
@@ -97,6 +99,7 @@ type Msg
     | TypeLongWordMsg Page.TypeLongWord.Msg
     | EtcMsg Page.Etc.Msg
     | TypeAnyMsg Page.TypeAny.Msg
+    | TypeShortWordMsg Page.TypeShortWord.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -210,6 +213,15 @@ update msg model =
             , Cmd.map EtcMsg topCmd
             )
 
+        ( TypeShortWordMsg subMsg, TypeShortWordPage subModel ) ->
+            let
+                ( newModel, topCmd, newEnv ) =
+                    Page.TypeShortWord.update subMsg subModel model.env
+            in
+            ( { model | env = newEnv, page = TypeShortWordPage newModel }
+            , Cmd.map TypeShortWordMsg topCmd
+            )
+
         ( _, _ ) ->
             ( model, Cmd.none )
 
@@ -277,6 +289,15 @@ goTo url model =
             , Cmd.map EtcMsg pageCmd
             )
 
+        Just "typeShortWord" ->
+            let
+                ( pageModel, pageCmd ) =
+                    Page.TypeShortWord.init newEnv
+            in
+            ( { newModel | page = TypeShortWordPage pageModel }
+            , Cmd.map TypeShortWordMsg pageCmd
+            )
+
         Just "typeAny" ->
             let
                 ( pageModel, pageCmd ) =
@@ -316,6 +337,9 @@ subscriptions model =
 
                 TypeAnyPage subModel ->
                     Sub.map TypeAnyMsg Page.TypeAny.subscriptions
+
+                TypeShortWordPage subModel ->
+                    Sub.map TypeShortWordMsg Page.TypeShortWord.subscriptions
 
                 _ ->
                     Sub.none
@@ -366,6 +390,10 @@ view model =
             TypeAnyPage subModel ->
                 Page.TypeAny.view subModel
                     |> Html.map TypeAnyMsg
+
+            TypeShortWordPage subModel ->
+                Page.TypeShortWord.view subModel
+                    |> Html.map TypeShortWordMsg
         ]
     }
 
