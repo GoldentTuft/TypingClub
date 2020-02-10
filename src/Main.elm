@@ -339,7 +339,7 @@ subscriptions model =
                     Sub.map TypeAnyMsg Page.TypeAny.subscriptions
 
                 TypeShortWordPage subModel ->
-                    Sub.map TypeShortWordMsg Page.TypeShortWord.subscriptions
+                    Sub.map TypeShortWordMsg (Page.TypeShortWord.subscriptions subModel)
 
                 _ ->
                     Sub.none

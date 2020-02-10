@@ -2,6 +2,7 @@ module Page.TypeShortWord exposing (Model, Msg, init, initInTrial, subscriptions
 
 import API
 import Browser.Events exposing (onKeyDown)
+import CountDown
 import Data.ShortWord as ShortWord exposing (Score)
 import Env exposing (Env)
 import Html exposing (..)
@@ -57,6 +58,7 @@ type alias ReadyData =
     { state : ReadyState
     , shortWords : ShortWord.ShortWords
     , customTypingWords : CustomTypingWords
+    , countDownTimer : CountDown.Timer
     , bestScore : Maybe Score
     , scoreHistory : List Score
     , ranking : Maybe API.LongWordRanking
@@ -84,6 +86,37 @@ type alias CustomTypingWord =
     }
 
 
+initialCountDownTimer : CountDown.Timer
+initialCountDownTimer =
+    CountDown.init True 3000 1000
+
+
+getCountDownTimer : Model -> Maybe CountDown.Timer
+getCountDownTimer model =
+    case model.state of
+        Init ->
+            Nothing
+
+        Error _ ->
+            Nothing
+
+        Ready readyData ->
+            Just readyData.countDownTimer
+
+
+setCountDownTimer : CountDown.Timer -> Model -> Model
+setCountDownTimer timer model =
+    case model.state of
+        Init ->
+            model
+
+        Error _ ->
+            model
+
+        Ready readyData ->
+            { model | state = Ready { readyData | countDownTimer = timer } }
+
+
 testDataAtReady : ReadyData
 testDataAtReady =
     let
@@ -93,7 +126,7 @@ testDataAtReady =
             , words = [ ShortWord.Word "hoge" "hoge", ShortWord.Word "piyo" "piyo", ShortWord.Word "bar" "bar" ]
             }
     in
-    ReadyData Trial sw (newTypingState sw) Nothing [] Nothing
+    ReadyData Trial sw (newTypingState sw) initialCountDownTimer Nothing [] Nothing
 
 
 init : Env -> ( Model, Cmd Msg )
@@ -120,24 +153,21 @@ initInTrial words =
     ( Model Init "", Cmd.none )
 
 
-reset : Model -> Env -> ( Model, Cmd Msg, Env )
-reset model env =
+reset : Model -> Model
+reset model =
     case model.state of
         Init ->
-            ( Model Init "", Cmd.none, env )
+            model
 
         Error _ ->
-            ( Model Init "", Cmd.none, env )
+            model
 
         Ready readyData ->
-            ( Model
-                (Ready
-                    readyData
-                )
-                ""
-            , Cmd.none
-            , env
-            )
+            { model
+                | state =
+                    Ready
+                        { readyData | countDownTimer = initialCountDownTimer }
+            }
 
 
 newTypingState : ShortWord.ShortWords -> CustomTypingWords
@@ -174,6 +204,7 @@ type Msg
     | GetRanking
     | ReceiveGetRanking (Result Http.Error API.LongWordRanking)
     | ResetGame (List ShortWord.Word)
+    | Tick CountDown.Timer
 
 
 run : msg -> Cmd msg
@@ -228,6 +259,14 @@ updateByMiss word words =
     updateCurrentWord newWord words
 
 
+suffleWords : ReadyData -> Cmd Msg
+suffleWords readyData =
+    readyData.shortWords.words
+        |> RandomList.shuffle
+        |> Random.map (List.take 1)
+        |> Random.generate ResetGame
+
+
 update : Msg -> Model -> Env -> ( Model, Cmd Msg, Env )
 update msg model env =
     case msg of
@@ -249,11 +288,8 @@ update msg model env =
                 "Escape" ->
                     case model.state of
                         Ready readyData ->
-                            ( model
-                            , readyData.shortWords.words
-                                |> RandomList.shuffle
-                                |> Random.map (List.take 1)
-                                |> Random.generate ResetGame
+                            ( reset model
+                            , suffleWords readyData
                             , env
                             )
 
@@ -443,6 +479,13 @@ update msg model env =
         ReceiveGetRanking (Err e) ->
             ( { model | notice = "ランキング取得失敗" }, Cmd.none, env )
 
+        Tick newTimer ->
+            let
+                hoge =
+                    Debug.log ("hoge" ++ String.fromInt (CountDown.getSecond newTimer)) "..."
+            in
+            ( setCountDownTimer newTimer model, Cmd.none, env )
+
 
 
 -- VIEW
@@ -454,7 +497,12 @@ view model =
         [ div [ class "element-panel" ]
             [ viewTyping model ]
         , div [ class "element-panel" ]
-            [ text "hoge" ]
+            [ getCountDownTimer model
+                |> Maybe.map CountDown.getSecond
+                |> Maybe.map String.fromInt
+                |> Maybe.withDefault "error"
+                |> text
+            ]
         ]
 
 
@@ -462,10 +510,16 @@ view model =
 ---- SUBSCRIPTIONS ----
 
 
-subscriptions : Sub Msg
-subscriptions =
+subscriptions : Model -> Sub Msg
+subscriptions model =
     Sub.batch
         [ onKeyDown (D.map KeyDown keyDecoder)
+        , case getCountDownTimer model of
+            Nothing ->
+                Sub.none
+
+            Just timer ->
+                CountDown.treatSubscription timer Tick
         ]
 
 
