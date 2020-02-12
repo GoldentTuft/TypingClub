@@ -88,7 +88,7 @@ type alias CustomTypingWord =
 
 initialCountDownTimer : CountDown.Timer
 initialCountDownTimer =
-    CountDown.init True 3000 1000
+    CountDown.init False 3000 1000
 
 
 getCountDownTimer : Model -> Maybe CountDown.Timer
@@ -117,16 +117,26 @@ setCountDownTimer timer model =
             { model | state = Ready { readyData | countDownTimer = timer } }
 
 
-testDataAtReady : ReadyData
-testDataAtReady =
-    let
-        sw =
-            { title = "title"
-            , id = -1
-            , words = [ ShortWord.Word "hoge" "hoge", ShortWord.Word "piyo" "piyo", ShortWord.Word "bar" "bar" ]
-            }
-    in
-    ReadyData Trial sw (newTypingState sw) initialCountDownTimer Nothing [] Nothing
+startCountDownTimer : Model -> Model
+startCountDownTimer model =
+    case getCountDownTimer model of
+        Nothing ->
+            model
+
+        Just timer ->
+            setCountDownTimer (CountDown.setStart timer) model
+
+
+testDataOfShowtWords =
+    { title = "title"
+    , id = -1
+    , words = [ ShortWord.Word "hoge" "hoge", ShortWord.Word "piyo" "piyo", ShortWord.Word "bar" "bar" ]
+    }
+
+
+newTestReadyData : ReadyData
+newTestReadyData =
+    ReadyData Trial testDataOfShowtWords (initCustomTypingWords testDataOfShowtWords) initialCountDownTimer Nothing [] Nothing
 
 
 init : Env -> ( Model, Cmd Msg )
@@ -145,7 +155,7 @@ init env =
                 Nothing ->
                     Nothing
     in
-    ( Model (Ready testDataAtReady) "", Cmd.none )
+    ( Model (Ready newTestReadyData) "", Cmd.none )
 
 
 initInTrial : ShortWord.ShortWords -> ( Model, Cmd Msg )
@@ -166,12 +176,15 @@ reset model =
             { model
                 | state =
                     Ready
-                        { readyData | countDownTimer = initialCountDownTimer }
+                        { readyData
+                            | countDownTimer = initialCountDownTimer
+                            , customTypingWords = initCustomTypingWords readyData.shortWords
+                        }
             }
 
 
-newTypingState : ShortWord.ShortWords -> CustomTypingWords
-newTypingState sw =
+initCustomTypingWords : ShortWord.ShortWords -> CustomTypingWords
+initCustomTypingWords sw =
     let
         isw =
             List.indexedMap Tuple.pair sw.words
@@ -284,42 +297,28 @@ update msg model env =
             ( model, Cmd.none, env )
 
         KeyDown key ->
-            case key of
-                "Escape" ->
-                    case model.state of
-                        Ready readyData ->
+            case model.state of
+                Init ->
+                    ( model, Cmd.none, env )
+
+                Error _ ->
+                    ( model, Cmd.none, env )
+
+                Ready readyData ->
+                    case ( CountDown.isZero readyData.countDownTimer, key ) of
+                        ( _, "Escape" ) ->
                             ( reset model
                             , suffleWords readyData
                             , env
                             )
 
-                        _ ->
+                        ( False, " " ) ->
+                            ( startCountDownTimer model, Cmd.none, env )
+
+                        ( False, _ ) ->
                             ( model, Cmd.none, env )
 
-                "Shift" ->
-                    ( model, Cmd.none, env )
-
-                "Enter" ->
-                    ( model, Cmd.none, env )
-
-                "Backspace" ->
-                    ( model, Cmd.none, env )
-
-                "Control" ->
-                    ( model, Cmd.none, env )
-
-                "Tab" ->
-                    ( model, Cmd.none, env )
-
-                _ ->
-                    case model.state of
-                        Init ->
-                            ( model, Cmd.none, env )
-
-                        Error _ ->
-                            ( model, Cmd.none, env )
-
-                        Ready readyData ->
+                        ( True, _ ) ->
                             let
                                 ( newCustomTypingWords, resCmd ) =
                                     case getCurrentWord readyData.customTypingWords of
@@ -480,10 +479,6 @@ update msg model env =
             ( { model | notice = "ランキング取得失敗" }, Cmd.none, env )
 
         Tick newTimer ->
-            let
-                hoge =
-                    Debug.log ("hoge" ++ String.fromInt (CountDown.getSecond newTimer)) "..."
-            in
             ( setCountDownTimer newTimer model, Cmd.none, env )
 
 

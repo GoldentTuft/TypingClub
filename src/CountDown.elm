@@ -1,4 +1,4 @@
-module CountDown exposing (Timer, getSecond, init, isZero, treatSubscription)
+module CountDown exposing (Timer, getSecond, init, isZero, setStart, setStop, toggleStart, treatSubscription)
 
 import Time
 
@@ -35,8 +35,14 @@ isStart (Timer timer) =
     timer.start == True
 
 
+isStop : Timer -> Bool
+isStop (Timer timer) =
+    timer.start == False
+
+
 isZero : Timer -> Bool
 isZero (Timer timer) =
+    -- なんだかisStopとかぶってるようなのが気になる
     timer.time <= 0
 
 
@@ -62,6 +68,7 @@ getSecond (Timer timer) =
 
 tick : Timer -> Timer
 tick (Timer timer) =
+    -- timeが0になったら、start=Falseにすべきだろうか?
     let
         newTime =
             if (timer.time - timer.interval) < 0 then
@@ -69,20 +76,29 @@ tick (Timer timer) =
 
             else
                 timer.time - timer.interval
+
+        newStart =
+            if newTime == 0 then
+                False
+
+            else
+                True
     in
-    Timer { timer | time = newTime }
+    Timer { timer | time = newTime, start = newStart }
 
 
 treatSubscription : Timer -> (Timer -> msg) -> Sub msg
 treatSubscription (Timer timer) userMsg =
-    if isZero (Timer timer) || isStart (Timer timer) == False then
+    if isZero (Timer timer) || isStop (Timer timer) then
         Sub.none
 
     else
         let
+            subTick : Timer -> Time.Posix -> Timer
             subTick subTimer time =
                 tick subTimer
 
+            sub : Sub Timer
             sub =
                 Time.every (toFloat timer.interval) (subTick (Timer timer))
         in
