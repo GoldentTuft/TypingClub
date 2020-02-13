@@ -136,7 +136,7 @@ testDataOfShowtWords =
 
 newTestReadyData : ReadyData
 newTestReadyData =
-    ReadyData Trial testDataOfShowtWords (initCustomTypingWords testDataOfShowtWords) initialCountDownTimer Nothing [] Nothing
+    ReadyData Trial testDataOfShowtWords (initCustomTypingWords testDataOfShowtWords.words) initialCountDownTimer Nothing [] Nothing
 
 
 init : Env -> ( Model, Cmd Msg )
@@ -154,8 +154,11 @@ init env =
 
                 Nothing ->
                     Nothing
+
+        readyData =
+            newTestReadyData
     in
-    ( Model (Ready newTestReadyData) "", Cmd.none )
+    ( Model (Ready readyData) "", shuffleWords readyData.shortWords )
 
 
 initInTrial : ShortWord.ShortWords -> ( Model, Cmd Msg )
@@ -178,16 +181,16 @@ reset model =
                     Ready
                         { readyData
                             | countDownTimer = initialCountDownTimer
-                            , customTypingWords = initCustomTypingWords readyData.shortWords
+                            , customTypingWords = initCustomTypingWords readyData.shortWords.words
                         }
             }
 
 
-initCustomTypingWords : ShortWord.ShortWords -> CustomTypingWords
-initCustomTypingWords sw =
+initCustomTypingWords : List ShortWord.Word -> CustomTypingWords
+initCustomTypingWords words =
     let
         isw =
-            List.indexedMap Tuple.pair sw.words
+            List.indexedMap Tuple.pair words
 
         fun ( i, d ) =
             { index = i
@@ -216,7 +219,7 @@ type Msg
     | ReceiveRegistRanking (Result Http.Error String)
     | GetRanking
     | ReceiveGetRanking (Result Http.Error API.LongWordRanking)
-    | ResetGame (List ShortWord.Word)
+    | ShuffleWords (List ShortWord.Word)
     | Tick CountDown.Timer
 
 
@@ -272,12 +275,12 @@ updateByMiss word words =
     updateCurrentWord newWord words
 
 
-suffleWords : ReadyData -> Cmd Msg
-suffleWords readyData =
-    readyData.shortWords.words
+shuffleWords : ShortWord.ShortWords -> Cmd Msg
+shuffleWords shortWords =
+    shortWords.words
         |> RandomList.shuffle
-        |> Random.map (List.take 1)
-        |> Random.generate ResetGame
+        |> Random.map (List.take (Basics.min 20 (List.length shortWords.words)))
+        |> Random.generate ShuffleWords
 
 
 update : Msg -> Model -> Env -> ( Model, Cmd Msg, Env )
@@ -289,12 +292,25 @@ update msg model env =
         ReceiveShortWords (Err e) ->
             ( { model | state = Error "お題取得失敗" }, Cmd.none, env )
 
-        ResetGame list ->
-            let
-                hoge =
-                    Debug.log "hoge" list
-            in
-            ( model, Cmd.none, env )
+        ShuffleWords list ->
+            case model.state of
+                Init ->
+                    ( model, Cmd.none, env )
+
+                Error _ ->
+                    ( model, Cmd.none, env )
+
+                Ready readyData ->
+                    ( { model
+                        | state =
+                            Ready
+                                { readyData
+                                    | customTypingWords = initCustomTypingWords list
+                                }
+                      }
+                    , Cmd.none
+                    , env
+                    )
 
         KeyDown key ->
             case model.state of
@@ -308,7 +324,7 @@ update msg model env =
                     case ( CountDown.isZero readyData.countDownTimer, key ) of
                         ( _, "Escape" ) ->
                             ( reset model
-                            , suffleWords readyData
+                            , shuffleWords readyData.shortWords
                             , env
                             )
 
@@ -490,7 +506,26 @@ view : Model -> Html Msg
 view model =
     div []
         [ div [ class "element-panel" ]
-            [ viewTyping model ]
+            [ case getCountDownTimer model of
+                Nothing ->
+                    text model.notice
+
+                Just timer ->
+                    case CountDown.getState timer of
+                        CountDown.Etc ->
+                            text "カウントダウンエラー"
+
+                        CountDown.Ready ->
+                            text "スペースキーでスタートです"
+
+                        CountDown.Tick ->
+                            CountDown.getSecond timer
+                                |> String.fromInt
+                                |> text
+
+                        CountDown.Zero ->
+                            viewTyping model
+            ]
         , div [ class "element-panel" ]
             [ getCountDownTimer model
                 |> Maybe.map CountDown.getSecond

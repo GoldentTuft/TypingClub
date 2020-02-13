@@ -1,4 +1,17 @@
-module CountDown exposing (Timer, getSecond, init, isZero, setStart, setStop, toggleStart, treatSubscription)
+module CountDown exposing
+    ( State(..)
+    , Timer
+    , getSecond
+    , getState
+    , init
+    , isReady
+    , isTick
+    , isZero
+    , setStart
+    , setStop
+    , toggleStart
+    , treatSubscription
+    )
 
 import Time
 
@@ -10,6 +23,13 @@ type Timer
         , time : Int
         , interval : Int
         }
+
+
+type State
+    = Ready
+    | Tick
+    | Zero
+    | Etc
 
 
 init : Bool -> Int -> Int -> Timer
@@ -30,9 +50,29 @@ reset (Timer timer) =
         }
 
 
-isStart : Timer -> Bool
-isStart (Timer timer) =
-    timer.start == True
+getState : Timer -> State
+getState (Timer timer) =
+    if isReady (Timer timer) then
+        Ready
+
+    else if isTick (Timer timer) then
+        Tick
+
+    else if isZero (Timer timer) then
+        Zero
+
+    else
+        Etc
+
+
+isReady : Timer -> Bool
+isReady (Timer timer) =
+    timer.start == False && timer.time == timer.initialTime
+
+
+isTick : Timer -> Bool
+isTick (Timer timer) =
+    timer.start == True && timer.time > 0
 
 
 isStop : Timer -> Bool
@@ -42,7 +82,6 @@ isStop (Timer timer) =
 
 isZero : Timer -> Bool
 isZero (Timer timer) =
-    -- なんだかisStopとかぶってるようなのが気になる
     timer.time <= 0
 
 
