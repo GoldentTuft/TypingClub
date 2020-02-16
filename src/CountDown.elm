@@ -4,9 +4,6 @@ module CountDown exposing
     , getSecond
     , getState
     , init
-    , isReady
-    , isTick
-    , isZero
     , setStart
     , setStop
     , toggleStart
@@ -28,8 +25,9 @@ type Timer
 type State
     = Ready
     | Tick
+    | Stop
     | Zero
-    | Etc
+    | Error
 
 
 init : Bool -> Int -> Int -> Timer
@@ -52,37 +50,26 @@ reset (Timer timer) =
 
 getState : Timer -> State
 getState (Timer timer) =
-    if isReady (Timer timer) then
-        Ready
+    case timer.start of
+        True ->
+            if timer.time <= 0 then
+                Zero
 
-    else if isTick (Timer timer) then
-        Tick
+            else
+                Tick
 
-    else if isZero (Timer timer) then
-        Zero
+        False ->
+            if timer.time <= 0 then
+                Zero
 
-    else
-        Etc
+            else if 0 < timer.time && timer.time < timer.initialTime then
+                Stop
 
+            else if timer.time == timer.initialTime then
+                Ready
 
-isReady : Timer -> Bool
-isReady (Timer timer) =
-    timer.start == False && timer.time == timer.initialTime
-
-
-isTick : Timer -> Bool
-isTick (Timer timer) =
-    timer.start == True && timer.time > 0
-
-
-isStop : Timer -> Bool
-isStop (Timer timer) =
-    timer.start == False
-
-
-isZero : Timer -> Bool
-isZero (Timer timer) =
-    timer.time <= 0
+            else
+                Error
 
 
 setStart : Timer -> Timer
@@ -128,7 +115,7 @@ tick (Timer timer) =
 
 treatSubscription : Timer -> (Timer -> msg) -> Sub msg
 treatSubscription (Timer timer) userMsg =
-    if isZero (Timer timer) || isStop (Timer timer) then
+    if List.member (getState (Timer timer)) [ Zero, Stop, Ready ] then
         Sub.none
 
     else

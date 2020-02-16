@@ -321,7 +321,7 @@ update msg model env =
                     ( model, Cmd.none, env )
 
                 Ready readyData ->
-                    case ( CountDown.isZero readyData.countDownTimer, key ) of
+                    case ( CountDown.getState readyData.countDownTimer == CountDown.Zero, key ) of
                         ( _, "Escape" ) ->
                             ( reset model
                             , shuffleWords readyData.shortWords
@@ -512,7 +512,10 @@ view model =
 
                 Just timer ->
                     case CountDown.getState timer of
-                        CountDown.Etc ->
+                        CountDown.Stop ->
+                            text "カウントダウンストップエラー"
+
+                        CountDown.Error ->
                             text "カウントダウンエラー"
 
                         CountDown.Ready ->
