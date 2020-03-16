@@ -1,4 +1,4 @@
-module Typing2 exposing (Data, State(..), getFixed, getRest, newData, toState, typeTo)
+module Typing2 exposing (Data, State(..), getFixed, getRest, getState, newData, typeTo)
 
 
 type alias Rule =
@@ -673,8 +673,8 @@ nextData fixedRule (Data data) =
         }
 
 
-toState : Data -> State
-toState (Data data) =
+getState : Data -> State
+getState (Data data) =
     data.state
 
 
@@ -725,7 +725,7 @@ typeTo input (Data data) =
                 -- 迷う。「ん」に対して「nk」などの動作が変わる。
                 -- そのままresを返すと、実入力に近い感じになる。「んk」,fix="ん",rest="",1miss,state=Miss
                 -- ミスの場合は巻き戻すような動作にすると、「」,fix="",rest="ん",1miss,state=Miss
-                -- 利用側で似たような巻き戻しを行った場合、missまで巻き戻されるので、ミス数は利用側で管理することになる
+                -- 利用側で似たような巻き戻しを行った場合、missまで巻き戻されるので、ミス数やstate=Missは利用側で管理することになる
                 -- 追記
                 -- missプロパティをこのライブラリで管理することをやめた。それにそのまま返す方式。
                 -- そのまま返すか、Missの場合は元のを返すか迷う。

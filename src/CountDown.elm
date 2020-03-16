@@ -32,6 +32,14 @@ type State
 
 init : Bool -> Int -> Int -> Timer
 init start initialTime interval =
+    -- 引数のチェックはどうするか?
+    -- assert(initialTime > 0)
+    -- assert(interval > 0)
+    -- assert(initialTime >= interval)
+    -- assert(initialTime % interval == 0)
+    -- errorフィールドでも持たせて、それがTrueならgetStateでErrorを返すのはどうだろう?
+    -- 返り値をMaybe Timerとかにするのは面倒くさい気がする。
+    -- 使う側はinit False 3000 1000とか、ハードコーディングだと思うし。
     Timer
         { start = start
         , initialTime = initialTime

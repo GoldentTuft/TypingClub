@@ -73,12 +73,15 @@ type ReadyState
 type alias CustomTypingWords =
     { finish : List CustomTypingWord
     , rest : List CustomTypingWord
+    , miss : Int
+    , missed : Bool
     }
 
 
 type alias CustomTypingWord =
     { index : Int
     , typingData : Typing.Data
+    , wordForView : String
     , inputHistory : String
     , miss : Int
     , startTime : Time.Posix
@@ -130,7 +133,7 @@ startCountDownTimer model =
 testDataOfShowtWords =
     { title = "title"
     , id = -1
-    , words = [ ShortWord.Word "hoge" "hoge", ShortWord.Word "piyo" "piyo", ShortWord.Word "bar" "bar" ]
+    , words = [ ShortWord.Word "田ζ中さん" "たなかさん", ShortWord.Word "佐ζ藤さん" "さとうさん", ShortWord.Word "bar" "bar" ]
     }
 
 
@@ -195,13 +198,14 @@ initCustomTypingWords words =
         fun ( i, d ) =
             { index = i
             , typingData = Typing.newData d.wordForInput
+            , wordForView = d.wordForView
             , inputHistory = ""
             , miss = 0
             , startTime = Time.millisToPosix 0
             , finishTime = Time.millisToPosix 0
             }
     in
-    { finish = [], rest = List.map fun isw }
+    { finish = [], rest = List.map fun isw, miss = 0, missed = False }
 
 
 
@@ -260,8 +264,13 @@ updateByCorrect key newTypingData word words =
                 | typingData = newTypingData
                 , inputHistory = word.inputHistory ++ key
             }
+
+        newWords =
+            { words
+                | missed = False
+            }
     in
-    updateCurrentWord newWord words
+    updateCurrentWord newWord newWords
 
 
 updateByMiss : CustomTypingWord -> CustomTypingWords -> CustomTypingWords
@@ -271,8 +280,14 @@ updateByMiss word words =
             { word
                 | miss = word.miss + 1
             }
+
+        newWords =
+            { words
+                | miss = words.miss + 1
+                , missed = True
+            }
     in
-    updateCurrentWord newWord words
+    updateCurrentWord newWord newWords
 
 
 shuffleWords : ShortWord.ShortWords -> Cmd Msg
@@ -347,13 +362,13 @@ update msg model env =
                                                     customTypingWord.typingData
 
                                                 nowS =
-                                                    nowT |> Typing.toState
+                                                    nowT |> Typing.getState
 
                                                 newT =
                                                     Typing.typeTo key nowT
 
                                                 newS =
-                                                    newT |> Typing.toState
+                                                    newT |> Typing.getState
                                             in
                                             case nowS of
                                                 Typing.Waiting ->
@@ -671,23 +686,70 @@ viewTyping model =
             div [] [ text ("error(" ++ str ++ " viewTyping") ]
 
         Ready readyData ->
-            div [] [ viewText readyData.customTypingWords ]
+            case getCurrentWord readyData.customTypingWords of
+                Nothing ->
+                    div [] [ text "finish" ]
+
+                Just word ->
+                    div [] [ viewText readyData.customTypingWords word ]
 
 
-viewText : CustomTypingWords -> Html msg
-viewText words =
-    case List.head words.rest of
-        Just word ->
-            div []
-                [ text "viewText"
-                , br [] []
-                , text (Typing.getFixed word.typingData)
-                , br [] []
-                , text (Typing.getRest word.typingData)
+getFixed : String -> Typing.Data -> String
+getFixed wordForView td =
+    let
+        fixed =
+            Typing.getFixed td
+    in
+    wordForView
+        |> String.left (String.length fixed)
+        |> String.replace "ζ" ""
+
+
+getRest : String -> Typing.Data -> String
+getRest wordForView td =
+    let
+        fixed =
+            Typing.getFixed td
+    in
+    wordForView
+        |> String.dropLeft (String.length fixed)
+        |> String.replace "ζ" ""
+
+
+getInputHistory : CustomTypingWord -> String
+getInputHistory word =
+    if String.length word.inputHistory > 30 then
+        String.right 30 word.inputHistory
+
+    else
+        word.inputHistory
+
+
+viewText : CustomTypingWords -> CustomTypingWord -> Html msg
+viewText words word =
+    div
+        [ class
+            (case words.missed of
+                True ->
+                    "typing-form__missed"
+
+                False ->
+                    "typing-form"
+            )
+        ]
+        [ div [ class "typing-form__body" ]
+            [ div [ class "typing-form__words" ]
+                [ span [ class "typing-form__fixed" ]
+                    [ text (getFixed word.wordForView word.typingData) ]
+                , span [ class "typing-form__rest" ]
+                    [ text (getRest word.wordForView word.typingData) ]
                 ]
-
-        Nothing ->
-            div [] [ text "finish viewText" ]
+            , div [ class "typing-form__input" ]
+                [ text (getInputHistory word) ]
+            , div [ class "typing-form__state" ]
+                [ text ("ミス数:" ++ String.fromInt words.miss) ]
+            ]
+        ]
 
 
 viewBestScore : Maybe Score -> Html msg
