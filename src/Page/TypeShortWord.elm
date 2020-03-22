@@ -84,6 +84,7 @@ type alias CustomTypingWord =
     , wordForView : String
     , inputHistory : String
     , miss : Int
+    , rhythmTimer : CountDown.Timer
     , startTime : Time.Posix
     , finishTime : Time.Posix
     }
@@ -107,6 +108,24 @@ getCountDownTimer model =
             Just readyData.countDownTimer
 
 
+getRhythmTimer : Model -> Maybe CountDown.Timer
+getRhythmTimer model =
+    case model.state of
+        Init ->
+            Nothing
+
+        Error _ ->
+            Nothing
+
+        Ready readyData ->
+            case getCurrentWord readyData.customTypingWords of
+                Nothing ->
+                    Nothing
+
+                Just word ->
+                    Just word.rhythmTimer
+
+
 setCountDownTimer : CountDown.Timer -> Model -> Model
 setCountDownTimer timer model =
     case model.state of
@@ -118,6 +137,31 @@ setCountDownTimer timer model =
 
         Ready readyData ->
             { model | state = Ready { readyData | countDownTimer = timer } }
+
+
+setRhythmTimer : CountDown.Timer -> Model -> Model
+setRhythmTimer timer model =
+    case model.state of
+        Init ->
+            model
+
+        Error _ ->
+            model
+
+        Ready readyData ->
+            case getCurrentWord readyData.customTypingWords of
+                Nothing ->
+                    model
+
+                Just word ->
+                    let
+                        newWord =
+                            { word | rhythmTimer = timer }
+
+                        newWords =
+                            updateCurrentWord newWord readyData.customTypingWords
+                    in
+                    { model | state = Ready { readyData | customTypingWords = newWords } }
 
 
 startCountDownTimer : Model -> Model
@@ -201,6 +245,12 @@ initCustomTypingWords words =
             , wordForView = d.wordForView
             , inputHistory = ""
             , miss = 0
+            , rhythmTimer =
+                if i == 0 then
+                    CountDown.init True 1 1
+
+                else
+                    CountDown.init True 500 100
             , startTime = Time.millisToPosix 0
             , finishTime = Time.millisToPosix 0
             }
@@ -225,6 +275,7 @@ type Msg
     | ReceiveGetRanking (Result Http.Error API.LongWordRanking)
     | ShuffleWords (List ShortWord.Word)
     | Tick CountDown.Timer
+    | TickRhythm CountDown.Timer
 
 
 run : msg -> Cmd msg
@@ -357,71 +408,77 @@ update msg model env =
                                             ( readyData.customTypingWords, Cmd.none )
 
                                         Just customTypingWord ->
-                                            let
-                                                nowT =
-                                                    customTypingWord.typingData
+                                            case CountDown.getState customTypingWord.rhythmTimer == CountDown.Zero of
+                                                False ->
+                                                    -- 入力ミスとしてもいいかも
+                                                    ( readyData.customTypingWords, Cmd.none )
 
-                                                nowS =
-                                                    nowT |> Typing.getState
+                                                True ->
+                                                    let
+                                                        nowT =
+                                                            customTypingWord.typingData
 
-                                                newT =
-                                                    Typing.typeTo key nowT
+                                                        nowS =
+                                                            nowT |> Typing.getState
 
-                                                newS =
-                                                    newT |> Typing.getState
-                                            in
-                                            case nowS of
-                                                Typing.Waiting ->
-                                                    case newS of
+                                                        newT =
+                                                            Typing.typeTo key nowT
+
+                                                        newS =
+                                                            newT |> Typing.getState
+                                                    in
+                                                    case nowS of
                                                         Typing.Waiting ->
-                                                            -- Waitingにはならないのに
-                                                            ( readyData.customTypingWords, Cmd.none )
+                                                            case newS of
+                                                                Typing.Waiting ->
+                                                                    -- Waitingにはならないのに
+                                                                    ( readyData.customTypingWords, Cmd.none )
+
+                                                                Typing.Typing ->
+                                                                    -- タイピングが開始された
+                                                                    ( updateByCorrect key newT customTypingWord readyData.customTypingWords, Cmd.none )
+
+                                                                Typing.Miss ->
+                                                                    ( updateByMiss customTypingWord readyData.customTypingWords, Cmd.none )
+
+                                                                Typing.Finish ->
+                                                                    -- finishTimeとstartTimeが同じ値で初期化されているなら、何もしなければfinishTime-startTime == 0になってくれる
+                                                                    ( updateByCorrect key newT customTypingWord readyData.customTypingWords, Cmd.none )
 
                                                         Typing.Typing ->
-                                                            -- タイピングが開始された
-                                                            ( updateByCorrect key newT customTypingWord readyData.customTypingWords, Task.perform StartTime Time.now )
+                                                            case newS of
+                                                                Typing.Waiting ->
+                                                                    -- Waitingにはならないのに
+                                                                    ( readyData.customTypingWords, Cmd.none )
+
+                                                                Typing.Typing ->
+                                                                    ( updateByCorrect key newT customTypingWord readyData.customTypingWords, Cmd.none )
+
+                                                                Typing.Miss ->
+                                                                    ( updateByMiss customTypingWord readyData.customTypingWords, Cmd.none )
+
+                                                                Typing.Finish ->
+                                                                    ( updateByCorrect key newT customTypingWord readyData.customTypingWords, Task.perform FinishTime Time.now )
 
                                                         Typing.Miss ->
-                                                            ( updateByMiss customTypingWord readyData.customTypingWords, Task.perform StartTime Time.now )
+                                                            case newS of
+                                                                Typing.Waiting ->
+                                                                    -- Waitingにはならないのに
+                                                                    ( readyData.customTypingWords, Cmd.none )
+
+                                                                Typing.Typing ->
+                                                                    ( updateByCorrect key newT customTypingWord readyData.customTypingWords, Cmd.none )
+
+                                                                Typing.Miss ->
+                                                                    ( updateByMiss customTypingWord readyData.customTypingWords, Cmd.none )
+
+                                                                Typing.Finish ->
+                                                                    ( updateByCorrect key newT customTypingWord readyData.customTypingWords, Task.perform FinishTime Time.now )
 
                                                         Typing.Finish ->
-                                                            -- finishTimeとstartTimeが同じ値で初期化されているなら、何もしなければfinishTime-startTime == 0になってくれる
-                                                            ( updateByCorrect key newT customTypingWord readyData.customTypingWords, Cmd.none )
-
-                                                Typing.Typing ->
-                                                    case newS of
-                                                        Typing.Waiting ->
-                                                            -- Waitingにはならないのに
-                                                            ( readyData.customTypingWords, Cmd.none )
-
-                                                        Typing.Typing ->
-                                                            ( updateByCorrect key newT customTypingWord readyData.customTypingWords, Cmd.none )
-
-                                                        Typing.Miss ->
-                                                            ( updateByMiss customTypingWord readyData.customTypingWords, Cmd.none )
-
-                                                        Typing.Finish ->
-                                                            ( updateByCorrect key newT customTypingWord readyData.customTypingWords, Task.perform FinishTime Time.now )
-
-                                                Typing.Miss ->
-                                                    case newS of
-                                                        Typing.Waiting ->
-                                                            -- Waitingにはならないのに
-                                                            ( readyData.customTypingWords, Cmd.none )
-
-                                                        Typing.Typing ->
-                                                            ( updateByCorrect key newT customTypingWord readyData.customTypingWords, Cmd.none )
-
-                                                        Typing.Miss ->
-                                                            ( updateByMiss customTypingWord readyData.customTypingWords, Cmd.none )
-
-                                                        Typing.Finish ->
-                                                            ( updateByCorrect key newT customTypingWord readyData.customTypingWords, Task.perform FinishTime Time.now )
-
-                                                Typing.Finish ->
-                                                    case newS of
-                                                        _ ->
-                                                            ( readyData.customTypingWords, Cmd.none )
+                                                            case newS of
+                                                                _ ->
+                                                                    ( readyData.customTypingWords, Cmd.none )
                             in
                             ( { model | state = Ready { readyData | customTypingWords = newCustomTypingWords } }, resCmd, env )
 
@@ -512,6 +569,17 @@ update msg model env =
         Tick newTimer ->
             ( setCountDownTimer newTimer model, Cmd.none, env )
 
+        TickRhythm newTimer ->
+            ( setRhythmTimer newTimer model
+            , case CountDown.getState newTimer of
+                CountDown.Zero ->
+                    Task.perform StartTime Time.now
+
+                _ ->
+                    Cmd.none
+            , env
+            )
+
 
 
 -- VIEW
@@ -560,14 +628,26 @@ view model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
+    let
+        ct =
+            getCountDownTimer model
+
+        rt =
+            getRhythmTimer model
+    in
     Sub.batch
         [ onKeyDown (D.map KeyDown keyDecoder)
-        , case getCountDownTimer model of
+        , case ct of
             Nothing ->
                 Sub.none
 
-            Just timer ->
-                CountDown.treatSubscription timer Tick
+            Just jct ->
+                case ( CountDown.getState jct, rt ) of
+                    ( CountDown.Zero, Just jrt ) ->
+                        CountDown.treatSubscription jrt TickRhythm
+
+                    ( _, _ ) ->
+                        CountDown.treatSubscription jct Tick
         ]
 
 
@@ -656,27 +736,28 @@ viewRankingList lwr =
                 ]
 
 
-viewScore : Maybe Score -> Html msg
-viewScore mscore =
-    case mscore of
-        Just score ->
-            let
-                us =
-                    scoreToUsefulScore score
-            in
-            div
-                [ class "typing-score__body" ]
-                [ text (us.time ++ "秒, ")
-                , text (us.miss ++ "ミス, ")
-                , text (us.accuracy ++ "%, ")
-                , text (us.kpm ++ "打/分")
-                ]
 
-        Nothing ->
-            div [] []
+-- viewDetails : Maybe Score -> Html msg
+-- viewDetails mscore =
+--     case mscore of
+--         Just score ->
+--             let
+--                 us =
+--                     scoreToUsefulScore score
+--             in
+--             div
+--                 [ class "typing-score__body" ]
+--                 [ text (us.time ++ "秒, ")
+--                 , text (us.miss ++ "ミス, ")
+--                 , text (us.accuracy ++ "%, ")
+--                 , text (us.kpm ++ "打/分")
+--                 ]
+--
+--         Nothing ->
+--             div [] []
 
 
-viewTyping : Model -> Html msg
+viewTyping : Model -> Html Msg
 viewTyping model =
     case model.state of
         Init ->
@@ -688,10 +769,65 @@ viewTyping model =
         Ready readyData ->
             case getCurrentWord readyData.customTypingWords of
                 Nothing ->
-                    div [] [ text "finish" ]
+                    -- Finishのはず
+                    viewDetails readyData.customTypingWords
 
                 Just word ->
-                    div [] [ viewText readyData.customTypingWords word ]
+                    viewText readyData.customTypingWords word
+
+
+getSumOfInput : List CustomTypingWord -> Int
+getSumOfInput words =
+    let
+        f w sum =
+            sum + String.length w.inputHistory
+    in
+    List.foldl f 0 words
+
+
+getSumOfMillis : List CustomTypingWord -> Int
+getSumOfMillis words =
+    let
+        f w sum =
+            sum + (Time.posixToMillis w.finishTime - Time.posixToMillis w.startTime)
+    in
+    List.foldl f 0 words
+
+
+viewAccuracy : Float -> Html Msg
+viewAccuracy ac =
+    text ("正確率: " ++ (ac * 100 |> round2) ++ "%")
+
+
+viewScore : Float -> Html Msg
+viewScore score =
+    text ("score: " ++ (score |> Round.round 0) ++ "pt")
+
+
+nbsp =
+    "\u{00A0}"
+
+
+viewDetails : CustomTypingWords -> Html Msg
+viewDetails words =
+    let
+        keys =
+            getSumOfInput words.finish
+
+        millis =
+            getSumOfMillis words.finish
+    in
+    div []
+        [ viewKpm (calcKpm millis keys)
+        , text ", "
+        , viewAccuracy (calcAccuracy words.miss keys)
+        , text ", "
+        , text (String.fromInt millis)
+        , text ", "
+        , text ("miss: " ++ String.fromInt words.miss)
+        , text ", "
+        , viewScore (calcScore millis keys words.miss)
+        ]
 
 
 getFixed : String -> Typing.Data -> String
@@ -725,7 +861,7 @@ getInputHistory word =
         word.inputHistory
 
 
-viewText : CustomTypingWords -> CustomTypingWord -> Html msg
+viewText : CustomTypingWords -> CustomTypingWord -> Html Msg
 viewText words word =
     div
         [ class
@@ -738,7 +874,18 @@ viewText words word =
             )
         ]
         [ div [ class "typing-form__body" ]
-            [ div [ class "typing-form__words" ]
+            [ div
+                [ class "typing-form__words"
+                , style
+                    "visibility"
+                    (case CountDown.getState word.rhythmTimer of
+                        CountDown.Zero ->
+                            "visible"
+
+                        _ ->
+                            "hidden"
+                    )
+                ]
                 [ span [ class "typing-form__fixed" ]
                     [ text (getFixed word.wordForView word.typingData) ]
                 , span [ class "typing-form__rest" ]
@@ -752,65 +899,48 @@ viewText words word =
         ]
 
 
-viewBestScore : Maybe Score -> Html msg
-viewBestScore mscore =
-    div [ class "typing-score" ]
-        [ div [ class "typing-score__title" ]
-            [ text "自己ベスト" ]
-        , viewScore mscore
-        ]
+
+-- viewBestScore : Maybe Score -> Html Msg
+-- viewBestScore mscore =
+--     div [ class "typing-score" ]
+--         [ div [ class "typing-score__title" ]
+--             [ text "自己ベスト" ]
+--         , viewScore mscore
+--         ]
+-- viewScoreHistory : List Score -> Html Msg
+-- viewScoreHistory scoreList =
+--     let
+--         sl =
+--             List.map (\n -> li [] [ viewScore (Just n) ]) scoreList
+--     in
+--     div [ class "typing-score-history" ]
+--         [ div [ class "typing-score-history__title" ]
+--             [ text ("スコア履歴(" ++ String.fromInt (List.length sl) ++ ")") ]
+--         , ul [] sl
+--         ]
 
 
-viewScoreHistory : List Score -> Html msg
-viewScoreHistory scoreList =
-    let
-        sl =
-            List.map (\n -> li [] [ viewScore (Just n) ]) scoreList
-    in
-    div [ class "typing-score-history" ]
-        [ div [ class "typing-score-history__title" ]
-            [ text ("スコア履歴(" ++ String.fromInt (List.length sl) ++ ")") ]
-        , ul [] sl
-        ]
+viewKpm : Float -> Html Msg
+viewKpm kpm =
+    text ("kpm: " ++ (kpm |> round2))
 
 
-calcSec : Time.Posix -> Time.Posix -> String
-calcSec startTime finishTime =
-    let
-        st =
-            Time.posixToMillis startTime |> toFloat
-
-        ft =
-            Time.posixToMillis finishTime |> toFloat
-
-        time =
-            (ft - st) / 1000
-    in
-    Round.round 2 time
+calcScore : Int -> Int -> Int -> Float
+calcScore millis keys miss =
+    -- 3ミスで1秒追加
+    toFloat keys / ((toFloat millis + toFloat miss / 3 * 1000) / (1000 * 60))
 
 
-calcKpm : Time.Posix -> Time.Posix -> Int -> String
-calcKpm startTime finishTime keys =
-    let
-        st =
-            Time.posixToMillis startTime |> toFloat
-
-        ft =
-            Time.posixToMillis finishTime |> toFloat
-
-        time =
-            ft - st
-
-        kpm =
-            toFloat keys / (time / (1000 * 60))
-    in
-    Round.round 2 kpm
+calcKpm : Int -> Int -> Float
+calcKpm millis keys =
+    toFloat keys / (toFloat millis / (1000 * 60))
 
 
-calcAccuracy : Int -> Int -> String
+calcAccuracy : Int -> Int -> Float
 calcAccuracy miss keys =
-    let
-        ac =
-            (toFloat keys - toFloat miss) / toFloat keys * 100
-    in
-    Round.round 2 ac
+    toFloat keys / (toFloat keys + toFloat miss)
+
+
+round2 : Float -> String
+round2 a =
+    Round.round 2 a
