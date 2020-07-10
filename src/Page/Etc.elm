@@ -62,6 +62,8 @@ viewLink : Model -> Html Msg
 viewLink model =
     div []
         [ a [ href "./#typeAny" ] [ text "何でもいいタイピング" ]
+        , br [] []
+        , a [ href "./#typeShortWord" ] [ text "短文" ]
         ]
 
 
