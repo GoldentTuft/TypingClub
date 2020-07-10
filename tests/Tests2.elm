@@ -285,6 +285,6 @@ typeAllKeys input words =
                 newTD =
                     Typing.typeTo k td
             in
-            ( newTD, List.append listState [ Typing.toState newTD ] )
+            ( newTD, List.append listState [ Typing.getState newTD ] )
     in
     List.foldl help first keys

@@ -10,7 +10,7 @@
   },
   "scripts": {
     "clean": "del .\\dist\\*.*",
-    "dev:remort": "npm run clean && parcel index.html --public-url ./",
+    "dev:remote": "npm run clean && parcel index.html --public-url ./",
     "dev": "parcel index.html",
     "build": "npm run clean && parcel build index.html --public-url ./",
     "test": "elm-test"
