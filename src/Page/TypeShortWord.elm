@@ -177,7 +177,11 @@ startCountDownTimer model =
 testDataOfShowtWords =
     { title = "title"
     , id = -1
-    , words = [ ShortWord.Word "田ζ中さん" "たなかさん", ShortWord.Word "佐ζ藤さん" "さとうさん", ShortWord.Word "bar" "bar" ]
+    , words =
+        [ ShortWord.Word "田ζ中さん" "たなかさん"
+        , ShortWord.Word "佐ζ藤さん" "さとうさん"
+        , ShortWord.Word "bar" "bar"
+        ]
     }
 
 
