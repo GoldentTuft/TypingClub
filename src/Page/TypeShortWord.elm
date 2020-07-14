@@ -627,11 +627,7 @@ view model =
                             viewTyping model
             ]
         , div [ class "element-panel" ]
-            [ getCountDownTimer model
-                |> Maybe.map CountDown.getSecond
-                |> Maybe.map String.fromInt
-                |> Maybe.withDefault "error"
-                |> text
+            [ text "Escキーでリセットです"
             ]
         ]
 
@@ -836,8 +832,6 @@ viewDetails words =
         , text ", "
         , viewAccuracy (calcAccuracy words.miss keys)
         , text ", "
-        , text (String.fromInt millis)
-        , text ", "
         , text ("miss: " ++ String.fromInt words.miss)
         , text ", "
         , viewScore (calcScore millis keys words.miss)
@@ -868,8 +862,8 @@ getRest wordForView td =
 
 getInputHistory : CustomTypingWord -> String
 getInputHistory word =
-    if String.length word.inputHistory > 30 then
-        String.right 30 word.inputHistory
+    if String.length word.inputHistory > 15 then
+        String.right 15 word.inputHistory
 
     else
         word.inputHistory
@@ -879,12 +873,11 @@ viewText : CustomTypingWords -> CustomTypingWord -> Html Msg
 viewText words word =
     div
         [ class
-            (case words.missed of
-                True ->
-                    "typing-form__missed"
+            (if words.missed == True then
+                "typing-form__missed"
 
-                False ->
-                    "typing-form"
+             else
+                "typing-form"
             )
         ]
         [ div [ class "typing-form__body" ]
@@ -908,7 +901,18 @@ viewText words word =
             , div [ class "typing-form__input" ]
                 [ text (getInputHistory word) ]
             , div [ class "typing-form__state" ]
-                [ text ("ミス数:" ++ String.fromInt words.miss) ]
+                [ text ("ミス数:" ++ String.fromInt words.miss)
+                , List.length words.finish
+                    + 1
+                    |> String.fromInt
+                    |> (++) (String.repeat 10 nbsp)
+                    |> text
+                , List.length words.finish
+                    + List.length words.rest
+                    |> String.fromInt
+                    |> (++) "/"
+                    |> text
+                ]
             ]
         ]
 
