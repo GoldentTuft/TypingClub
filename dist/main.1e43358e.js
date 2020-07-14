@@ -12337,7 +12337,7 @@ var $author$project$Page$TypeShortWord$initCustomTypingWords = function (words) 
 			index: i,
 			inputHistory: '',
 			miss: 0,
-			rhythmTimer: (!i) ? A3($author$project$CountDown$init, true, 1, 1) : A3($author$project$CountDown$init, true, 500, 100),
+			rhythmTimer: (!i) ? A3($author$project$CountDown$init, true, 1, 1) : A3($author$project$CountDown$init, true, 250, 50),
 			startTime: $elm$time$Time$millisToPosix(0),
 			typingData: $author$project$Typing2$newData(d.wordForInput),
 			wordForView: d.wordForView
@@ -12355,15 +12355,38 @@ var $author$project$Data$ShortWord$Word = F2(
 	function (wordForView, wordForInput) {
 		return {wordForInput: wordForInput, wordForView: wordForView};
 	});
+var $author$project$Emb$ShortWord1$list = _List_fromArray(
+	[
+		_Utils_Tuple2('図ζ書ζ館で待ったをかけるビジネス', 'としょかんでまったをかけるびじねす'),
+		_Utils_Tuple2('鳴りζ物入りのスクーターが手にζ余る', 'なりものいりのすくーたーがてにあまる'),
+		_Utils_Tuple2('ゴリ押しする希ζ望で死ζ角にζ入る', 'ごりおしするきぼうでしかくにはいる'),
+		_Utils_Tuple2('びしょぬれのぞうきんをζ八ζ方ζ塞がり', 'びしょぬれのぞうきんをはっぽうふさがり'),
+		_Utils_Tuple2('ζ策をζ弄するζ鼻ζ息がζ荒いζζ羊', 'さくをろうするはないきがあらいひつじ'),
+		_Utils_Tuple2('油ζ断もζ隙もないてこ入れをする', 'ゆだんもすきもないてこいれをする'),
+		_Utils_Tuple2('ζ進ζ退きわまるζ穀つぶしのζ孫', 'しんたいきわまるごくつぶしのまご'),
+		_Utils_Tuple2('ありったけζ製ζ造されるあぶくζ銭', 'ありったけせいぞうされるあぶくぜに'),
+		_Utils_Tuple2('あらかじめζ余りζ物にはζ福がある', 'あらかじめあまりものにはふくがある'),
+		_Utils_Tuple2('ζ一ζζ丁目のζ声がつぶれるζ神ζ様', 'いっちょうめのこえがつぶれるかみさま'),
+		_Utils_Tuple2('これだけζ雁ζ首をζ揃えるワープロ', 'これだけがんくびをそろえるわーぷろ'),
+		_Utils_Tuple2('名乗りを上げるζ同じζ穴のζζ狢', 'なのりをあげるおなじあなのむじな'),
+		_Utils_Tuple2('ひたすらζ隅に置けない生けるζζζ屍', 'ひたすらすみにおけないいけるしかばね'),
+		_Utils_Tuple2('ζ折ζ紙付きのトイレットペーパー', 'おりがみつきのといれっとぺーぱー'),
+		_Utils_Tuple2('ζζ小異を捨ててζ大ζ同につくζ我ζ々', 'しょういをすててだいどうにつくわれわれ'),
+		_Utils_Tuple2('ちょろちょろ時ζ間をζ稼ぐζ操作', 'ちょろちょろじかんをかせぐそうさ'),
+		_Utils_Tuple2('ようやくζ金はζ天下のζ回りζ物', 'ようやくかねはてんかのまわりもの'),
+		_Utils_Tuple2('しばしばζζ心をζζ傾けるζ善ζ悪', 'しばしばこころをかたむけるぜんあく'),
+		_Utils_Tuple2('ζζ心はζ往ζζ生ζ際がζ悪い時ζ刻', 'こころはおうじょうぎわがわるいじこく'),
+		_Utils_Tuple2('どっちもどっちを鵜呑みにするζ末っ子', 'どっちもどっちをうのみにするすえっこ')
+	]);
 var $author$project$Page$TypeShortWord$testDataOfShowtWords = {
 	id: -1,
 	title: 'title',
-	words: _List_fromArray(
-		[
-			A2($author$project$Data$ShortWord$Word, '田ζ中さん', 'たなかさん'),
-			A2($author$project$Data$ShortWord$Word, '佐ζ藤さん', 'さとうさん'),
-			A2($author$project$Data$ShortWord$Word, 'bar', 'bar')
-		])
+	words: A2(
+		$elm$core$List$map,
+		function (x) {
+			return A2($author$project$Data$ShortWord$Word, x.a, x.b);
+		},
+		$author$project$Emb$ShortWord1$list)
 };
 var $author$project$Page$TypeShortWord$newTestReadyData = A7(
 	$author$project$Page$TypeShortWord$ReadyData,
@@ -15130,6 +15153,12 @@ var $author$project$Typing2$getState = function (_v0) {
 	var data = _v0.a;
 	return data.state;
 };
+var $author$project$Page$TypeShortWord$maxWords = function (list) {
+	return A2(
+		$elm$core$Basics$min,
+		$elm$core$List$length(list),
+		10);
+};
 var $author$project$Page$TypeShortWord$reset = function (model) {
 	var _v0 = model.state;
 	switch (_v0.$) {
@@ -15396,7 +15425,11 @@ var $author$project$Page$TypeShortWord$update = F3(
 										_Utils_update(
 											readyData,
 											{
-												customTypingWords: $author$project$Page$TypeShortWord$initCustomTypingWords(list)
+												customTypingWords: $author$project$Page$TypeShortWord$initCustomTypingWords(
+													A2(
+														$elm$core$List$take,
+														$author$project$Page$TypeShortWord$maxWords(list),
+														list))
 											}))
 								}),
 							$elm$core$Platform$Cmd$none,
@@ -18705,7 +18738,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "56159" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "49852" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

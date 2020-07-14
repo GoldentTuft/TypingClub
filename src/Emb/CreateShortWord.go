@@ -93,6 +93,14 @@ func writeElmWords(file string, words []word) error {
 
 }
 
+func basename(s string) string {
+	s = filepath.Base(s)
+	if dot := strings.LastIndex(s, "."); dot >= 0 {
+		s = s[:dot]
+	}
+	return s
+}
+
 func main() {
 	flag.Parse()
 	if len(os.Args) <= 2 {
@@ -101,24 +109,15 @@ func main() {
 	}
 
 	words := readTextWords(*in)
-
-	fmt.Println(words)
+	fmt.Printf("%d words readed.\n", len(words))
 
 	if *out == "" {
 		*out = basename(*in) + ".elm"
 	}
-	fmt.Println(*out)
 
 	err := writeElmWords(*out, words)
 	if err != nil {
 		log.Fatal(err)
 	}
-}
-
-func basename(s string) string {
-	s = filepath.Base(s)
-	if dot := strings.LastIndex(s, "."); dot >= 0 {
-		s = s[:dot]
-	}
-	return s
+	fmt.Printf("%s created.", *out)
 }

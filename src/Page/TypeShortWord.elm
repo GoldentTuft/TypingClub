@@ -4,6 +4,7 @@ import API
 import Browser.Events exposing (onKeyDown)
 import CountDown
 import Data.ShortWord as ShortWord exposing (Score)
+import Emb.ShortWord1
 import Env exposing (Env)
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -11,6 +12,7 @@ import Html.Events exposing (..)
 import Http
 import Json.Decode as D
 import Json.Encode as E
+import List exposing (minimum)
 import Random
 import Random.List as RandomList
 import Round
@@ -178,10 +180,11 @@ testDataOfShowtWords =
     { title = "title"
     , id = -1
     , words =
-        [ ShortWord.Word "田ζ中さん" "たなかさん"
-        , ShortWord.Word "佐ζ藤さん" "さとうさん"
-        , ShortWord.Word "bar" "bar"
-        ]
+        List.map
+            (\x ->
+                ShortWord.Word (Tuple.first x) (Tuple.second x)
+            )
+            Emb.ShortWord1.list
     }
 
 
@@ -254,7 +257,7 @@ initCustomTypingWords words =
                     CountDown.init True 1 1
 
                 else
-                    CountDown.init True 500 100
+                    CountDown.init True 250 50
             , startTime = Time.millisToPosix 0
             , finishTime = Time.millisToPosix 0
             }
@@ -353,6 +356,11 @@ shuffleWords shortWords =
         |> Random.generate ShuffleWords
 
 
+maxWords : List ShortWord.Word -> Int
+maxWords list =
+    Basics.min (List.length list) 10
+
+
 update : Msg -> Model -> Env -> ( Model, Cmd Msg, Env )
 update msg model env =
     case msg of
@@ -375,7 +383,9 @@ update msg model env =
                         | state =
                             Ready
                                 { readyData
-                                    | customTypingWords = initCustomTypingWords list
+                                    | customTypingWords =
+                                        initCustomTypingWords <|
+                                            List.take (maxWords list) list
                                 }
                       }
                     , Cmd.none
