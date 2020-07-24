@@ -12416,7 +12416,27 @@ var $author$project$Emb$ShortWord1$list = _List_fromArray(
 		_Utils_Tuple2('ホッチキスがζ人手にζ渡るとζ一ζ皮剥ける', 'ほっちきすがひとでにわたるとひとかわむける'),
 		_Utils_Tuple2('そのくせζζ暖かいζ朝にはヘドが出る', 'そのくせあたたかいあさにはへどがでる'),
 		_Utils_Tuple2('ζζ秒読みにζ入る木を見てζ森を見ず', 'びょうよみにはいるきをみてもりをみず'),
-		_Utils_Tuple2('ついでに手に乗るζ粉ζ雪のなれの果て', 'ついでにてにのるこなゆきのなれのはて')
+		_Utils_Tuple2('ついでに手に乗るζ粉ζ雪のなれの果て', 'ついでにてにのるこなゆきのなれのはて'),
+		_Utils_Tuple2('ζ磨きがかかるζζ狐につままれるζ副作ζ用', 'みがきがかかるきつねにつままれるふくさよう'),
+		_Utils_Tuple2('ζ琴ζ線に触れるつぶらなζ音ζ楽が手をζ離れる', 'きんせんにふれるつぶらなおんがくがてをはなれる'),
+		_Utils_Tuple2('ちなみにζζ所変わればζ品変わるコンビニ', 'ちなみにところかわればしなかわるこんびに'),
+		_Utils_Tuple2('ζ引ζ導をζ渡すζζ心を打つ差しζ金ζ方ζ法', 'いんどうをわたすこころをうつさしがねほうほう'),
+		_Utils_Tuple2('ζζ命を懸けるとげとげしい無いζ物ねだり', 'いのちをかけるとげとげしいないものねだり'),
+		_Utils_Tuple2('いわば気がζ進まないもじもじζ乾ζ坤ζ一ζ擲', 'いわばきがすすまないもじもじけんこんいってき'),
+		_Utils_Tuple2('火を見るよりζ明らかランキングをチェック', 'ひをみるよりあきらからんきんぐをちぇっく'),
+		_Utils_Tuple2('ζζ枕をζ並べるζ危ないベーコンに目を凝らす', 'まくらをならべるあぶないべーこんにめをこらす'),
+		_Utils_Tuple2('蜘蛛の子を散らすζζ嵐のζ前のζ静けさ', 'くものこをちらすあらしのまえのしずけさ'),
+		_Utils_Tuple2('悲ζ鳴を上げる機にζζ乗ずるナメクジ', 'ひめいをあげるきにじょうずるなめくじ'),
+		_Utils_Tuple2('いい子になるζ幼児を見て見ぬふりをする', 'いいこになるようじをみてみぬふりをする'),
+		_Utils_Tuple2('おおよそ二ζ足のわらじを履くパスポート', 'おおよそにそくのわらじをはくぱすぽーと'),
+		_Utils_Tuple2('一ζζ線をζ画すζζ調子がいいつんつん。', 'いっせんをかくすちょうしがいいつんつん。'),
+		_Utils_Tuple2('ζ臨機ζ応ζ変に羽目をζ外すζ冷たいζ心ζ臓', 'りんきおうへんにはめをはずすつめたいしんぞう'),
+		_Utils_Tuple2('手が込んだおζ安い御ζ用でζζ正ζ面を切る', 'てがこんだおやすいごようでしょうめんをきる'),
+		_Utils_Tuple2('あこがれの、ほぼ好きこそζ物のζζ上手なれ', 'あこがれの、ほぼすきこそもののじょうずなれ'),
+		_Utils_Tuple2('突ζζζ拍子もないζ初ζ心にζ返るζζ漁師', 'とっぴょうしもないしょしんにかえるりょうし'),
+		_Utils_Tuple2('ζ射ζ程ζ距離にζ入るζζ命のζ洗ζ濯', 'しゃていきょりにはいるいのちのせんたく'),
+		_Utils_Tuple2('ζ張合いがないζ郷に入ってはζ郷にζζ従え', 'はりあいがないごうにいってはごうにしたがえ'),
+		_Utils_Tuple2('ζ箔がつく気のせいに身を入れるζ内ζ閣', 'はくがつくきのせいにみをいれるないかく')
 	]);
 var $author$project$Page$TypeShortWord$testDataOfShowtWords = {
 	id: -1,
@@ -17726,6 +17746,20 @@ var $author$project$Page$TypeShortWord$viewTyping = function (model) {
 			}
 	}
 };
+var $author$project$Page$TypeShortWord$wordsSumaryView = function (words) {
+	return A2(
+		$elm$html$Html$p,
+		_List_Nil,
+		_List_fromArray(
+			[
+				$elm$html$Html$text(
+				function (a) {
+					return a + 'ワード';
+				}(
+					$elm$core$String$fromInt(
+						$elm$core$List$length(words.words))))
+			]));
+};
 var $author$project$Page$TypeShortWord$view = function (model) {
 	return A2(
 		$elm$html$Html$div,
@@ -17772,7 +17806,22 @@ var $author$project$Page$TypeShortWord$view = function (model) {
 					]),
 				_List_fromArray(
 					[
-						$elm$html$Html$text('Escキーでリセットです')
+						A2(
+						$elm$html$Html$p,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Escキーでリセットです。')
+							])),
+						function () {
+						var _v2 = model.state;
+						if (_v2.$ === 'Ready') {
+							var data = _v2.a;
+							return A2($elm$html$Html$Lazy$lazy, $author$project$Page$TypeShortWord$wordsSumaryView, data.shortWords);
+						} else {
+							return A2($elm$html$Html$p, _List_Nil, _List_Nil);
+						}
+					}()
 					]))
 			]));
 };
@@ -18767,7 +18816,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "61942" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "55728" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

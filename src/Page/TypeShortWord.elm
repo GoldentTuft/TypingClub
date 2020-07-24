@@ -9,6 +9,7 @@ import Env exposing (Env)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Html.Lazy exposing (lazy)
 import Http
 import Json.Decode as D
 import Json.Encode as E
@@ -627,8 +628,24 @@ view model =
                             viewTyping model
             ]
         , div [ class "element-panel" ]
-            [ text "Escキーでリセットです"
+            [ p [] [ text "Escキーでリセットです。" ]
+            , case model.state of
+                Ready data ->
+                    lazy wordsSumaryView data.shortWords
+
+                _ ->
+                    p [] []
             ]
+        ]
+
+
+wordsSumaryView : ShortWord.ShortWords -> Html Msg
+wordsSumaryView words =
+    p []
+        [ List.length words.words
+            |> String.fromInt
+            |> (\a -> a ++ "ワード")
+            |> text
         ]
 
 
