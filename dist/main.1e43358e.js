@@ -12496,7 +12496,17 @@ var $author$project$Emb$ShortWord1$list = _List_fromArray(
 		_Utils_Tuple2('きらめくにぎやかζ喧嘩ζζ両ζ成ζ敗', 'きらめくにぎやかけんかりょうせいばい'),
 		_Utils_Tuple2('ζζ良ζ薬ζ口にζ苦しで行き当たりばったり', 'りょうやくくちににがしでいきあたりばったり'),
 		_Utils_Tuple2('気の利いた追い打ちをかけるζ腕が上がる', 'きのきいたおいうちをかけるうでがあがる'),
-		_Utils_Tuple2('さいころでζ骨のζ髄までζ本音を吐くζ労ζ働', 'さいころでほねのずいまでほんねをはくろうどう')
+		_Utils_Tuple2('さいころでζ骨のζ髄までζ本音を吐くζ労ζ働', 'さいころでほねのずいまでほんねをはくろうどう'),
+		_Utils_Tuple2('化けのζ皮がはがれるζ鬼の目にもζζ涙', 'ばけのかわがはがれるおにのめにもなみだ'),
+		_Utils_Tuple2('遺ζ憾なく地ζ獄ζ耳をζ顎でζ使う', 'いかんなくじごくみみをあごでつかう'),
+		_Utils_Tuple2('急いてはζ事を仕ζ損じるとζ道ζ草を食う', 'せいてはことをしそんじるとみちくさをくう'),
+		_Utils_Tuple2('ひねるユーモアにζ太鼓ζ判を押す土ζζ俵', 'ひねるゆーもあにたいこばんをおすどひょう'),
+		_Utils_Tuple2('ζ辺りζ構わず向かうところζ敵なしのζ空', 'あたりかまわずむかうところてきなしのそら'),
+		_Utils_Tuple2('おもむろに焼きを入れる八百ζζ長でζ人目を引く', 'おもむろにやきをいれるやおちょうでひとめをひく'),
+		_Utils_Tuple2('ζ明るいζ右からζζ左で名をあげる', 'あかるいみぎからひだりでなをあげる'),
+		_Utils_Tuple2('ζ顔ζ色をζζ窺うζ袖のζ下がζ板につく', 'かおいろをうかがうそでのしたがいたにつく'),
+		_Utils_Tuple2('手のζζ施しようがないζ垂ζζ直に目をζ背ける', 'てのほどこしようがないすいちょくにめをそむける'),
+		_Utils_Tuple2('子ζ供だましで暮らしを立てるさくさくリズム', 'こどもだましでくらしをたてるさくさくりずむ')
 	]);
 var $author$project$Page$TypeShortWord$testDataOfShowtWords = {
 	id: -1,
@@ -18876,7 +18886,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "55341" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "62230" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
