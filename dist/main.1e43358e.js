@@ -12532,11 +12532,21 @@ var $author$project$Emb$ShortWord1$list = _List_fromArray(
 		_Utils_Tuple2('ζ幸ζ福にメスを入れるζ人ζ間のζ歌', 'こうふくにめすをいれるにんげんのうた'),
 		_Utils_Tuple2('ζ猫もζζ杓子も歯ζζ車が噛み合う四ζ日', 'ねこもしゃくしもはぐるまがかみあうよっか'),
 		_Utils_Tuple2('ζ一ζ翼をζ担う小ζ鳥はζ風ζ穴を開ける', 'いちよくをになうことりはかざあなをあける'),
-		_Utils_Tuple2('馬耳ζ東ζ風でもv神ζ経がζ細かいライバル', 'ばじとうふうでもしんけいがこまかいらいばる'),
+		_Utils_Tuple2('馬耳ζ東ζ風でもζ神ζ経がζ細かいライバル', 'ばじとうふうでもしんけいがこまかいらいばる'),
 		_Utils_Tuple2('一ζ糸まとわずζ足踏みするζ外ζζ出', 'いっしまとわずあしぶみするがいしゅつ'),
 		_Utils_Tuple2('まんじゅうにζ色をつける手を打つζζ兄ζ弟', 'まんじゅうにいろをつけるてをうつきょうだい'),
 		_Utils_Tuple2('ζ言葉が過ぎるζ質ζ問でもζζζ懐がζ深い', 'ことばがすぎるしつもんでもふところがふかい'),
-		_Utils_Tuple2('ζ伏ζ線を張るめまいは目ζζ頭を押さえる', 'ふくせんをはるめまいはめがしらをおさえる')
+		_Utils_Tuple2('ζ伏ζ線を張るめまいは目ζζ頭を押さえる', 'ふくせんをはるめまいはめがしらをおさえる'),
+		_Utils_Tuple2('ζ鼻のζ下を伸ばすダイエットにζ熱を上げる', 'はなのしたをのばすだいえっとにねつをあげる'),
+		_Utils_Tuple2('沽ζ券にかかわるζ面と向かってステップ', 'こけんにかかわるめんとむかってすてっぷ'),
+		_Utils_Tuple2('みるみるエチケットをζ声をζ大にする', 'みるみるえちけっとをこえをだいにする'),
+		_Utils_Tuple2('気がζ沈むラジオにζζ命をζ預ける', 'きがしずむらじおにいのちをあずける'),
+		_Utils_Tuple2('ζ涼しいζ顔ζ推ζ進をζ顎でしゃくる', 'すずしいかおすいしんをあごでしゃくる'),
+		_Utils_Tuple2('ζ声を枯らすさわやかのネタが割れるζζ幸せ', 'こえをからすさわやかのねたがわれるしあわせ'),
+		_Utils_Tuple2('ζ申しζ分がない汚ζ点をζ残すζ印ζ刷', 'もうしぶんがないおてんをのこすいんさつ'),
+		_Utils_Tuple2('ζζ頭でっかちでζ虻ζ蜂取らずのしぐさ', 'あたまでっかちであぶはちとらずのしぐさ'),
+		_Utils_Tuple2('じかにζ一ζ肌脱ぐトレーナーのスタミナ', 'じかにひとはだぬぐとれーなーのすたみな'),
+		_Utils_Tuple2('目を見張る火にζζ油をζ注ぐからくり', 'めをみはるひにあぶらをそそぐからくり')
 	]);
 var $author$project$Page$TypeShortWord$testDataOfShowtWords = {
 	id: -1,
@@ -18916,7 +18926,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "52112" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "59349" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
