@@ -12556,7 +12556,17 @@ var $author$project$Emb$ShortWord1$list = _List_fromArray(
 		_Utils_Tuple2('ζζ集ζ団で吐き気をζζ催す折り合いをつける', 'しゅうだんではきけをもよおすおりあいをつける'),
 		_Utils_Tuple2('ζζ心がζ洗われるトンネルをもたらす', 'こころがあらわれるとんねるをもたらす'),
 		_Utils_Tuple2('ζ速い地ζ団駄を踏むからかうζ友ζ達', 'はやいじだんだをふむからかうともだち'),
-		_Utils_Tuple2('ζ腕ζζ力にζζ訴えるζ応ζ用にζ精が出る', 'わんりょくにうったえるおうようにせいがでる')
+		_Utils_Tuple2('ζ腕ζζ力にζζ訴えるζ応ζ用にζ精が出る', 'わんりょくにうったえるおうようにせいがでる'),
+		_Utils_Tuple2('ζ虚を衝くζ腰がζ低いまじめのζ童話', 'きょをつくこしがひくいまじめのどうわ'),
+		_Utils_Tuple2('あくびを噛みζ殺すおしゃべりζ先ζ生', 'あくびをかみころすおしゃべりせんせい'),
+		_Utils_Tuple2('途ζ方に暮れるζ親子が気を取りζ直す', 'とほうにくれるおやこがきをとりなおす'),
+		_Utils_Tuple2('ζ樹ζ木でぎこちない泣くに泣けないセミ', 'じゅもくでぎこちないなくになけないせみ'),
+		_Utils_Tuple2('ζ物のζ弾みでζ白ζ黒をハッキリさせる', 'もののはずみでしろくろをはっきりさせる'),
+		_Utils_Tuple2('捨てるζ神あればζ拾うζ神ありおじさん', 'すてるかみあればひろうかみありおじさん'),
+		_Utils_Tuple2('ふびんでζ何がζ何でもζ脚ζζ光を浴びる', 'ふびんでなにがなんでもきゃっこうをあびる'),
+		_Utils_Tuple2('ζζ再びζ流れを汲むζ凄いζ筋をζ通す', 'ふたたびながれをくむすごいすじをとおす'),
+		_Utils_Tuple2('ζ溺れるζ者はζ藁をもζ掴むζ腕を鳴らす', 'おぼれるものはわらをもつかむうでをならす'),
+		_Utils_Tuple2('ζζ心を惹かれるζ何でもありスイッチ', 'こころをひかれるなんでもありすいっち')
 	]);
 var $author$project$Page$TypeShortWord$testDataOfShowtWords = {
 	id: -1,
@@ -18936,7 +18946,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51101" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51251" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
