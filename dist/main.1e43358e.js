@@ -12576,7 +12576,12 @@ var $author$project$Emb$ShortWord1$list = _List_fromArray(
 		_Utils_Tuple2('絵に描いたζ餅でζ育てるすっぽかすヤクザ', 'えにかいたもちでそだてるすっぽかすやくざ'),
 		_Utils_Tuple2('ζ大見得を切るレッスンにζζ力を入れる', 'おおみえをきるれっすんにちからをいれる'),
 		_Utils_Tuple2('ζ痛いζζ所を衝く委ζ員のζ怒りを買う', 'いたいところをつくいいんのいかりをかう'),
-		_Utils_Tuple2('工ζ夫を凝らすロボットにζ信を問うζ存ζ在', 'くふうをこらすろぼっとにしんをとうそんざい')
+		_Utils_Tuple2('工ζ夫を凝らすロボットにζ信を問うζ存ζ在', 'くふうをこらすろぼっとにしんをとうそんざい'),
+		_Utils_Tuple2('抜け目がないζζ両手にζ花のきらきらζ生ζ活', 'ぬけめがないりょうてにはなのきらきらせいかつ'),
+		_Utils_Tuple2('借りてきたζ猫がしぶといζ梨のつぶて', 'かりてきたねこがしぶといなしのつぶて'),
+		_Utils_Tuple2('ζ裏をζ返せばアルコールでζζ頭を冷やす', 'うらをかえせばあるこーるであたまをひやす'),
+		_Utils_Tuple2('ζ要ζζ領を得ないことわざでζ対ζ策', 'ようりょうをえないことわざでたいさく'),
+		_Utils_Tuple2('ζ弘ζ法ζ筆をζ選ばず、つむじを曲げる', 'こうぼうふでをえらばず、つむじをまげる')
 	]);
 var $author$project$Page$TypeShortWord$testDataOfShowtWords = {
 	id: -1,
@@ -18956,7 +18961,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "55420" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51648" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
