@@ -12581,7 +12581,22 @@ var $author$project$Emb$ShortWord1$list = _List_fromArray(
 		_Utils_Tuple2('借りてきたζ猫がしぶといζ梨のつぶて', 'かりてきたねこがしぶといなしのつぶて'),
 		_Utils_Tuple2('ζ裏をζ返せばアルコールでζζ頭を冷やす', 'うらをかえせばあるこーるであたまをひやす'),
 		_Utils_Tuple2('ζ要ζζ領を得ないことわざでζ対ζ策', 'ようりょうをえないことわざでたいさく'),
-		_Utils_Tuple2('ζ弘ζ法ζ筆をζ選ばず、つむじを曲げる', 'こうぼうふでをえらばず、つむじをまげる')
+		_Utils_Tuple2('ζ弘ζ法ζ筆をζ選ばず、つむじを曲げる', 'こうぼうふでをえらばず、つむじをまげる'),
+		_Utils_Tuple2('ζ耳をζζ疑うζζζ褌を締めるステージ', 'みみをうたがうふんどしをしめるすてーじ'),
+		_Utils_Tuple2('ζζ頭をζ絞るリサイクルワールドカップ', 'あたまをしぼるりさいくるわーるどかっぷ'),
+		_Utils_Tuple2('ぐうの音も出ないζ綿ζ密なζ公ζ然の秘ζ密', 'ぐうのねもでないめんみつなこうぜんのひみつ'),
+		_Utils_Tuple2('ζ眉にζ唾をつける血の気がζ多いζ清ζ潔', 'まゆにつばをつけるちのけがおおいせいけつ'),
+		_Utils_Tuple2('奇をてらうプリンターにζ端をζ発する', 'きをてらうぷりんたーにたんをはっする'),
+		_Utils_Tuple2('ζ採ζ算が取れるζ鬼にζ金ζ棒のリスト', 'さいさんがとれるおににかなぼうのりすと'),
+		_Utils_Tuple2('ζ所ζ帯を持つマカロニとちくわのζ成ζ功', 'しょたいをもつまかろにとちくわのせいこう'),
+		_Utils_Tuple2('意地でもおんぶに抱っこでζ大なたを振るう', 'いじでもおんぶにだっこでおおなたをふるう'),
+		_Utils_Tuple2('駆け出しアナウンサーにおζζ灸を据える', 'かけだしあなうんさーにおきゅうをすえる'),
+		_Utils_Tuple2('ζ弱音を吐くディスカウントにζζ心がζ弾む', 'よわねをはくでぃすかうんとにこころがはずむ'),
+		_Utils_Tuple2('科ζ学一ζζ点張りにζ軍ζ配が上がる', 'かがくいってんばりにぐんばいがあがる'),
+		_Utils_Tuple2('ζζ直ζ接ハムでζζ帳ζ尻を合わせる背ζ中だ', 'ちょくせつはむでちょうじりをあわせるせなかだ'),
+		_Utils_Tuple2('ζ喉から手が出るにおいにζ敷居をまたぐ', 'のどからてがでるにおいにしきいをまたぐ'),
+		_Utils_Tuple2('カエルの子はカエルζζ冥利に尽きるお手上げ', 'かえるのこはかえるみょうりにつきるおてあげ'),
+		_Utils_Tuple2('あうんの呼ζζ吸マニアがζζ錦をζ飾る', 'あうんのこきゅうまにあがにしきをかざる')
 	]);
 var $author$project$Page$TypeShortWord$testDataOfShowtWords = {
 	id: -1,
@@ -18961,7 +18976,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51648" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "49332" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
