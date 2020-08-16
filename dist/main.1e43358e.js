@@ -12596,7 +12596,17 @@ var $author$project$Emb$ShortWord1$list = _List_fromArray(
 		_Utils_Tuple2('ζζ直ζ接ハムでζζ帳ζ尻を合わせる背ζ中だ', 'ちょくせつはむでちょうじりをあわせるせなかだ'),
 		_Utils_Tuple2('ζ喉から手が出るにおいにζ敷居をまたぐ', 'のどからてがでるにおいにしきいをまたぐ'),
 		_Utils_Tuple2('カエルの子はカエルζζ冥利に尽きるお手上げ', 'かえるのこはかえるみょうりにつきるおてあげ'),
-		_Utils_Tuple2('あうんの呼ζζ吸マニアがζζ錦をζ飾る', 'あうんのこきゅうまにあがにしきをかざる')
+		_Utils_Tuple2('あうんの呼ζζ吸マニアがζζ錦をζ飾る', 'あうんのこきゅうまにあがにしきをかざる'),
+		_Utils_Tuple2('ζ薄気味ζ悪いもぬけのζ殻のζ倉庫でζ迷う', 'うすきみわるいもぬけのからのそうこでまよう'),
+		_Utils_Tuple2('一ζζ刻をζζ争うウハウハにζ思いを焦がす', 'いっこくをあらそううはうはにおもいをこがす'),
+		_Utils_Tuple2('ζ横ζ道にそれるアニメがζ後を絶たない', 'よこみちにそれるあにめがあとをたたない'),
+		_Utils_Tuple2('当たりζ障りがないζ禁止がζ影を落とす', 'あたりさわりがないきんしがかげをおとす'),
+		_Utils_Tuple2('言うだけ野暮にζ声を振りζ絞るスタイル', 'いうだけやぼにこえをふりしぼるすたいる'),
+		_Utils_Tuple2('破ζ竹のζζ勢いで目からζζ鱗が落ちる', 'はちくのいきおいでめからうろこがおちる'),
+		_Utils_Tuple2('歯にζ衣着せぬ御ζ託をζ並べるバンド', 'はにきぬきせぬごたくをならべるばんど'),
+		_Utils_Tuple2('つかみζζ所がないなまめかしい掘り出しζ物', 'つかみどころがないなまめかしいほりだしもの'),
+		_Utils_Tuple2('ζζ常軌をζ逸するζ七ζ転び八起きの日ζ誌', 'じょうきをいっするななころびやおきのにっし'),
+		_Utils_Tuple2('目にも留まらぬζ能ζ天気がζ金科ζζ玉ζζ条', 'めにもとまらぬのうてんきがきんかぎょくじょう')
 	]);
 var $author$project$Page$TypeShortWord$testDataOfShowtWords = {
 	id: -1,
@@ -18976,7 +18986,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "49332" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "65036" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
