@@ -1,4 +1,4 @@
-module Tests2 exposing (all)
+module TestsTyping2 exposing (all, testMakeRome)
 
 import Expect
 import Test exposing (..)
@@ -14,6 +14,29 @@ import Typing2 as Typing
 -- all =
 --     describe "A Test Suite"
 --         (testFail "んしゃん" [ "nssyann" ])
+
+
+type alias MakeRomeTestData =
+    { input : String
+    , expect : String
+    }
+
+
+testMakeRome : Test
+testMakeRome =
+    let
+        kanas =
+            [ MakeRomeTestData "あいうえお" "aiueo"
+            ]
+    in
+    describe "Test makeRome"
+        (List.map
+            (\kana ->
+                test ("test " ++ kana.input) <|
+                    \_ -> Expect.pass
+            )
+            kanas
+        )
 
 
 all : Test
