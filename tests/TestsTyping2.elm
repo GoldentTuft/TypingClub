@@ -1,47 +1,62 @@
-module TestsTyping2 exposing (all, testMakeRome)
+module TestsTyping2 exposing (testGetHistory, testMakeRomaji, testTypeTo)
 
 import Expect
 import Test exposing (..)
 import Typing2 as Typing
 
 
+testGetHistory : Test
+testGetHistory =
+    let
+        testList =
+            [ { word = "じゃ", input = "z" }
+            , { word = "じゃじゃ", input = "jaz" }
+            ]
+    in
+    describe "Test getHistory"
+        (List.map
+            (\testItem ->
+                test ("test " ++ testItem.word) <|
+                    \_ ->
+                        Typing.newData testItem.word
+                            |> typeAllKeys2 testItem.input
+                            |> Typing.getHistory
+                            |> Expect.equal testItem.input
+            )
+            testList
+        )
 
--- Check out http://package.elm-lang.org/packages/elm-community/elm-test/latest to learn more about testing in Elm!
--- all : Test
--- all =
---     describe "test" [ jikken ]
--- all : Test
--- all =
---     describe "A Test Suite"
---         (testFail "んしゃん" [ "nssyann" ])
 
-
-type alias MakeRomeTestData =
+type alias MakeRomajiTestData =
     { input : String
     , expect : String
     }
 
 
-testMakeRome : Test
-testMakeRome =
+testMakeRomaji : Test
+testMakeRomaji =
     let
         kanas =
-            [ MakeRomeTestData "あいうえお" "aiueo"
+            [ MakeRomajiTestData "あいうえお" "aiueo"
             ]
     in
-    describe "Test makeRome"
+    describe "Test makeRomaji"
         (List.map
             (\kana ->
                 test ("test " ++ kana.input) <|
-                    \_ -> Expect.pass
+                    \_ ->
+                        Typing.newPrintRules
+                            |> Typing.setPriorities Typing.defaultPriorities
+                            |> Typing.makeRomaji (Typing.newData kana.input)
+                            |> Expect.equal kana.expect
             )
             kanas
         )
 
 
-all : Test
-all =
-    describe "A Test Suite"
+testTypeTo : Test
+testTypeTo =
+    describe "Test testTypeTo"
         (List.concat
             [ testSuccess "んっこ"
                 [ "xnkko"
@@ -182,7 +197,12 @@ testSuccessHelp words input =
                 finish =
                     List.member Typing.Finish resList
             in
-            if miss == False && finish == True && (words == Typing.getFixed resData) then
+            if
+                (miss == False)
+                    && (finish == True)
+                    && (words == Typing.getFixed resData)
+                    && (input == Typing.getHistory resData)
+            then
                 Expect.pass
 
             else
@@ -311,3 +331,8 @@ typeAllKeys input words =
             ( newTD, List.append listState [ Typing.getState newTD ] )
     in
     List.foldl help first keys
+
+
+typeAllKeys2 : String -> Typing.Data -> Typing.Data
+typeAllKeys2 inputs data =
+    List.foldl (\input d -> Typing.typeTo input d) data (String.split "" inputs)

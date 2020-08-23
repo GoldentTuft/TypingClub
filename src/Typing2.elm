@@ -1,4 +1,18 @@
-module Typing2 exposing (Data, State(..), getFixed, getRest, getState, newData, typeTo)
+module Typing2 exposing
+    ( Data
+    , State(..)
+    , defaultPriorities
+    , getFixed
+    , getHistory
+    , getRest
+    , getState
+    , hoge
+    , makeRomaji
+    , newData
+    , newPrintRules
+    , setPriorities
+    , typeTo
+    )
 
 
 type alias Rule =
@@ -625,6 +639,7 @@ type Data
         , restWords : String
         , convertBuf : ConvertBuf
         , state : State
+        , history : String
         }
 
 
@@ -642,6 +657,7 @@ newData words =
         , restWords = words
         , convertBuf = ConvertBuf "" Nothing romanTable
         , state = Waiting
+        , history = ""
         }
 
 
@@ -670,6 +686,7 @@ nextData fixedRule (Data data) =
 
             else
                 Typing
+        , history = data.history ++ fixedRule.input
         }
 
 
@@ -688,6 +705,11 @@ getRest (Data data) =
     data.restWords
 
 
+getHistory : Data -> String
+getHistory (Data data) =
+    data.history ++ data.convertBuf.inputBuffer
+
+
 typeTo : String -> Data -> Data
 typeTo input (Data data) =
     let
@@ -701,7 +723,7 @@ typeTo input (Data data) =
             List.filter (\r -> String.startsWith r.output data.restWords) nextCandidates
 
         tmpFixed =
-            List.filter (\r -> (==) sumInput r.input) acceptCandidates |> List.head
+            List.filter (\r -> sumInput == r.input) acceptCandidates |> List.head
 
         nl =
             List.length nextCandidates
@@ -743,3 +765,101 @@ typeTo input (Data data) =
     else
         -- 確定したものはあるが、まだ変化する可能性はある。
         Data { data | convertBuf = ConvertBuf sumInput tmpFixed nextCandidates, state = Typing }
+
+
+type alias PrintRule =
+    { rule : Rule
+    , priority : Int
+    }
+
+
+type alias PrintRules =
+    List PrintRule
+
+
+newPrintRules : PrintRules
+newPrintRules =
+    List.map (\r -> { rule = r, priority = 0 }) romanTable
+
+
+defaultPriorities : List ( String, Int )
+defaultPriorities =
+    [ ( "ja", 3 )
+    , ( "zya", 2 )
+    , ( "jya", 1 )
+    , ( "n", 3 )
+    , ( "xn", 2 )
+    ]
+
+
+setPriorities : List ( String, Int ) -> PrintRules -> PrintRules
+setPriorities priorities printRules =
+    let
+        getPriority : PrintRule -> List ( String, Int ) -> Int
+        getPriority pr ps =
+            case ps of
+                [] ->
+                    pr.priority
+
+                x :: xs ->
+                    if pr.rule.input == Tuple.first x then
+                        Tuple.second x
+
+                    else
+                        getPriority pr xs
+
+        sf : PrintRule -> PrintRule -> Order
+        sf a b =
+            compare b.priority a.priority
+    in
+    List.map
+        (\r ->
+            { r | priority = getPriority r priorities }
+        )
+        printRules
+        |> List.sortWith sf
+
+
+makeRomaji_ : Data -> PrintRules -> PrintRules -> String
+makeRomaji_ data trialRules originalRules =
+    case trialRules of
+        [] ->
+            "!error"
+
+        x :: xs ->
+            if String.startsWith x.rule.output (getRest data) == True then
+                let
+                    -- 仮確定なら進めてしまう。makeROmaji_は(Bool, String)を戻り値にすべきかも。
+                    -- という予測
+                    typedData =
+                        typeTo x.rule.input data
+                in
+                case getState typedData of
+                    Miss ->
+                        makeRomaji_ data xs originalRules
+
+                    Finish ->
+                        getHistory typedData
+
+                    _ ->
+                        makeRomaji_ typedData originalRules originalRules
+
+            else
+                makeRomaji_ data xs originalRules
+
+
+makeRomaji : Data -> PrintRules -> String
+makeRomaji data printRules =
+    makeRomaji_ data printRules printRules
+
+
+hoge =
+    let
+        data =
+            newData "じゃんけんじゃん"
+                |> typeTo "z"
+                |> Debug.log ""
+    in
+    newPrintRules
+        |> setPriorities defaultPriorities
+        |> makeRomaji data
