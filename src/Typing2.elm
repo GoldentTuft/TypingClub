@@ -1,15 +1,19 @@
 module Typing2 exposing
     ( Data
+    , PrintRule
+    , Rules
     , State(..)
     , defaultPriorities
     , getFixed
     , getHistory
     , getRest
-    , getState
+    ,  getState
+       -- , getWantingKeys__test
+
     , hoge
     , makeRomaji
     , newData
-    , newPrintRules
+    , romanTable
     , setPriorities
     , typeTo
     )
@@ -18,611 +22,616 @@ module Typing2 exposing
 type alias Rule =
     { input : String
     , output : String
+    , priority : Int
     }
 
 
-romanTable : List Rule
+type alias Rules =
+    List Rule
+
+
+romanTable : Rules
 romanTable =
-    [ Rule "-" "ー"
-    , Rule "~" "〜"
-    , Rule "." "。"
-    , Rule "," "、"
-    , Rule "[" "「"
-    , Rule "]" "」"
-    , Rule "va" "ゔぁ"
-    , Rule "vi" "ゔぃ"
-    , Rule "vu" "ゔ"
-    , Rule "ve" "ゔぇ"
-    , Rule "vo" "ゔぉ"
-    , Rule "vya" "ゔゃ"
-    , Rule "vyi" "ゔぃ"
-    , Rule "vyu" "ゔゅ"
-    , Rule "vye" "ゔぇ"
-    , Rule "vyo" "ゔょ"
-    , Rule "kya" "きゃ"
-    , Rule "kyi" "きぃ"
-    , Rule "kyu" "きゅ"
-    , Rule "kye" "きぇ"
-    , Rule "kyo" "きょ"
-    , Rule "gya" "ぎゃ"
-    , Rule "gyi" "ぎぃ"
-    , Rule "gyu" "ぎゅ"
-    , Rule "gye" "ぎぇ"
-    , Rule "gyo" "ぎょ"
-    , Rule "sya" "しゃ"
-    , Rule "syi" "しぃ"
-    , Rule "syu" "しゅ"
-    , Rule "sye" "しぇ"
-    , Rule "syo" "しょ"
-    , Rule "sha" "しゃ"
-    , Rule "shi" "し"
-    , Rule "shu" "しゅ"
-    , Rule "she" "しぇ"
-    , Rule "sho" "しょ"
-    , Rule "zya" "じゃ"
-    , Rule "zyi" "じぃ"
-    , Rule "zyu" "じゅ"
-    , Rule "zye" "じぇ"
-    , Rule "zyo" "じょ"
-    , Rule "tya" "ちゃ"
-    , Rule "tyi" "ちぃ"
-    , Rule "tyu" "ちゅ"
-    , Rule "tye" "ちぇ"
-    , Rule "tyo" "ちょ"
-    , Rule "cha" "ちゃ"
-    , Rule "chi" "ち"
-    , Rule "chu" "ちゅ"
-    , Rule "che" "ちぇ"
-    , Rule "cho" "ちょ"
-    , Rule "cya" "ちゃ"
-    , Rule "cyi" "ちぃ"
-    , Rule "cyu" "ちゅ"
-    , Rule "cye" "ちぇ"
-    , Rule "cyo" "ちょ"
-    , Rule "dya" "ぢゃ"
-    , Rule "dyi" "ぢぃ"
-    , Rule "dyu" "ぢゅ"
-    , Rule "dye" "ぢぇ"
-    , Rule "dyo" "ぢょ"
-    , Rule "tsa" "つぁ"
-    , Rule "tsi" "つぃ"
-    , Rule "tse" "つぇ"
-    , Rule "tso" "つぉ"
-    , Rule "tha" "てゃ"
-    , Rule "thi" "てぃ"
-    , Rule "thu" "てゅ"
-    , Rule "the" "てぇ"
-    , Rule "tho" "てょ"
-    , Rule "dha" "でゃ"
-    , Rule "dhi" "でぃ"
-    , Rule "dhu" "でゅ"
-    , Rule "dhe" "でぇ"
-    , Rule "dho" "でょ"
-    , Rule "twa" "とぁ"
-    , Rule "twi" "とぃ"
-    , Rule "twu" "とぅ"
-    , Rule "twe" "とぇ"
-    , Rule "two" "とぉ"
-    , Rule "dwa" "どぁ"
-    , Rule "dwi" "どぃ"
-    , Rule "dwu" "どぅ"
-    , Rule "dwe" "どぇ"
-    , Rule "dwo" "どぉ"
-    , Rule "nya" "にゃ"
-    , Rule "nyi" "にぃ"
-    , Rule "nyu" "にゅ"
-    , Rule "nye" "にぇ"
-    , Rule "nyo" "にょ"
-    , Rule "hya" "ひゃ"
-    , Rule "hyi" "ひぃ"
-    , Rule "hyu" "ひゅ"
-    , Rule "hye" "ひぇ"
-    , Rule "hyo" "ひょ"
-    , Rule "bya" "びゃ"
-    , Rule "byi" "びぃ"
-    , Rule "byu" "びゅ"
-    , Rule "bye" "びぇ"
-    , Rule "byo" "びょ"
-    , Rule "pya" "ぴゃ"
-    , Rule "pyi" "ぴぃ"
-    , Rule "pyu" "ぴゅ"
-    , Rule "pye" "ぴぇ"
-    , Rule "pyo" "ぴょ"
-    , Rule "fa" "ふぁ"
-    , Rule "fi" "ふぃ"
-    , Rule "fu" "ふ"
-    , Rule "fe" "ふぇ"
-    , Rule "fo" "ふぉ"
-    , Rule "fya" "ふゃ"
-    , Rule "fyu" "ふゅ"
-    , Rule "fyo" "ふょ"
-    , Rule "mya" "みゃ"
-    , Rule "myi" "みぃ"
-    , Rule "myu" "みゅ"
-    , Rule "mye" "みぇ"
-    , Rule "myo" "みょ"
-    , Rule "rya" "りゃ"
-    , Rule "ryi" "りぃ"
-    , Rule "ryu" "りゅ"
-    , Rule "rye" "りぇ"
-    , Rule "ryo" "りょ"
-    , Rule "nn" "ん"
-    , Rule "n" "ん"
-    , Rule "xn" "ん"
-    , Rule "a" "あ"
-    , Rule "i" "い"
-    , Rule "u" "う"
-    , Rule "wu" "う"
-    , Rule "e" "え"
-    , Rule "o" "お"
-    , Rule "xa" "ぁ"
-    , Rule "xi" "ぃ"
-    , Rule "xu" "ぅ"
-    , Rule "xe" "ぇ"
-    , Rule "xo" "ぉ"
-    , Rule "la" "ぁ"
-    , Rule "li" "ぃ"
-    , Rule "lu" "ぅ"
-    , Rule "le" "ぇ"
-    , Rule "lo" "ぉ"
-    , Rule "lyi" "ぃ"
-    , Rule "xyi" "ぃ"
-    , Rule "lye" "ぇ"
-    , Rule "xye" "ぇ"
-    , Rule "ye" "いぇ"
-    , Rule "ka" "か"
-    , Rule "ki" "き"
-    , Rule "ku" "く"
-    , Rule "ke" "け"
-    , Rule "ko" "こ"
-    , Rule "xka" "ヵ"
-    , Rule "xke" "ヶ"
-    , Rule "lka" "ヵ"
-    , Rule "lke" "ヶ"
-    , Rule "ga" "が"
-    , Rule "gi" "ぎ"
-    , Rule "gu" "ぐ"
-    , Rule "ge" "げ"
-    , Rule "go" "ご"
-    , Rule "sa" "さ"
-    , Rule "si" "し"
-    , Rule "su" "す"
-    , Rule "se" "せ"
-    , Rule "so" "そ"
-    , Rule "ca" "か"
-    , Rule "ci" "し"
-    , Rule "cu" "く"
-    , Rule "ce" "せ"
-    , Rule "co" "こ"
-    , Rule "qa" "くぁ"
-    , Rule "qi" "くぃ"
-    , Rule "qu" "く"
-    , Rule "qe" "くぇ"
-    , Rule "qo" "くぉ"
-    , Rule "kwa" "くぁ"
-    , Rule "gwa" "ぐぁ"
-    , Rule "gwi" "ぐぃ"
-    , Rule "gwu" "ぐぅ"
-    , Rule "gwe" "ぐぇ"
-    , Rule "gwo" "ぐぉ"
-    , Rule "za" "ざ"
-    , Rule "zi" "じ"
-    , Rule "zu" "ず"
-    , Rule "ze" "ぜ"
-    , Rule "zo" "ぞ"
-    , Rule "ja" "じゃ"
-    , Rule "ji" "じ"
-    , Rule "ju" "じゅ"
-    , Rule "je" "じぇ"
-    , Rule "jo" "じょ"
-    , Rule "jya" "じゃ"
-    , Rule "jyi" "じぃ"
-    , Rule "jyu" "じゅ"
-    , Rule "jye" "じぇ"
-    , Rule "jyo" "じょ"
-    , Rule "ta" "た"
-    , Rule "ti" "ち"
-    , Rule "tu" "つ"
-    , Rule "tsu" "つ"
-    , Rule "te" "て"
-    , Rule "to" "と"
-    , Rule "da" "だ"
-    , Rule "di" "ぢ"
-    , Rule "du" "づ"
-    , Rule "de" "で"
-    , Rule "do" "ど"
-    , Rule "xtu" "っ"
-    , Rule "xtsu" "っ"
-    , Rule "ltu" "っ"
-    , Rule "ltsu" "っ"
-    , Rule "na" "な"
-    , Rule "ni" "に"
-    , Rule "nu" "ぬ"
-    , Rule "ne" "ね"
-    , Rule "no" "の"
-    , Rule "ha" "は"
-    , Rule "hi" "ひ"
-    , Rule "hu" "ふ"
-    , Rule "fu" "ふ"
-    , Rule "he" "へ"
-    , Rule "ho" "ほ"
-    , Rule "ba" "ば"
-    , Rule "bi" "び"
-    , Rule "bu" "ぶ"
-    , Rule "be" "べ"
-    , Rule "bo" "ぼ"
-    , Rule "pa" "ぱ"
-    , Rule "pi" "ぴ"
-    , Rule "pu" "ぷ"
-    , Rule "pe" "ぺ"
-    , Rule "po" "ぽ"
-    , Rule "ma" "ま"
-    , Rule "mi" "み"
-    , Rule "mu" "む"
-    , Rule "me" "め"
-    , Rule "mo" "も"
-    , Rule "xya" "ゃ"
-    , Rule "lya" "ゃ"
-    , Rule "ya" "や"
-    , Rule "wyi" "ゐ"
-    , Rule "xyu" "ゅ"
-    , Rule "lyu" "ゅ"
-    , Rule "yu" "ゆ"
-    , Rule "wye" "ゑ"
-    , Rule "xyo" "ょ"
-    , Rule "lyo" "ょ"
-    , Rule "yo" "よ"
-    , Rule "ra" "ら"
-    , Rule "ri" "り"
-    , Rule "ru" "る"
-    , Rule "re" "れ"
-    , Rule "ro" "ろ"
-    , Rule "xwa" "ゎ"
-    , Rule "lwa" "ゎ"
-    , Rule "wa" "わ"
-    , Rule "wi" "うぃ"
-    , Rule "we" "うぇ"
-    , Rule "wo" "を"
-    , Rule "wha" "うぁ"
-    , Rule "whi" "うぃ"
-    , Rule "whu" "う"
-    , Rule "whe" "うぇ"
-    , Rule "who" "うぉ"
-    , Rule "qqa" "っくぁ"
-    , Rule "qqi" "っくぃ"
-    , Rule "qqu" "っく"
-    , Rule "qqe" "っくぇ"
-    , Rule "qqo" "っくぉ"
-    , Rule "vva" "っゔぁ"
-    , Rule "vvi" "っゔぃ"
-    , Rule "vvu" "っゔ"
-    , Rule "vve" "っゔぇ"
-    , Rule "vvo" "っゔぉ"
-    , Rule "vvya" "っゔゃ"
-    , Rule "vvyi" "っゔぃ"
-    , Rule "vvyu" "っゔゅ"
-    , Rule "vvye" "っゔぇ"
-    , Rule "vvyo" "っゔょ"
-    , Rule "lla" "っぁ"
-    , Rule "lli" "っぃ"
-    , Rule "llu" "っぅ"
-    , Rule "lle" "っぇ"
-    , Rule "llo" "っぉ"
-    , Rule "llyi" "っぃ"
-    , Rule "llye" "っぇ"
-    , Rule "llka" "っヵ"
-    , Rule "llke" "っヶ"
-    , Rule "lltu" "っっ"
-    , Rule "llya" "っゃ"
-    , Rule "llyu" "っゅ"
-    , Rule "llyo" "っょ"
-    , Rule "llwa" "っゎ"
-    , Rule "xxn" "っん"
-    , Rule "xxa" "っぁ"
-    , Rule "xxi" "っぃ"
-    , Rule "xxu" "っぅ"
-    , Rule "xxe" "っぇ"
-    , Rule "xxo" "っぉ"
-    , Rule "xxyi" "っぃ"
-    , Rule "xxye" "っぇ"
-    , Rule "xxka" "っヵ"
-    , Rule "xxke" "っヶ"
-    , Rule "xxtu" "っっ"
-    , Rule "xxya" "っゃ"
-    , Rule "xxyu" "っゅ"
-    , Rule "xxyo" "っょ"
-    , Rule "xxwa" "っゎ"
-    , Rule "kkya" "っきゃ"
-    , Rule "kkyi" "っきぃ"
-    , Rule "kkyu" "っきゅ"
-    , Rule "kkye" "っきぇ"
-    , Rule "kkyo" "っきょ"
-    , Rule "kka" "っか"
-    , Rule "kki" "っき"
-    , Rule "kku" "っく"
-    , Rule "kke" "っけ"
-    , Rule "kko" "っこ"
-    , Rule "kkwa" "っくぁ"
-    , Rule "ggya" "っぎゃ"
-    , Rule "ggyi" "っぎぃ"
-    , Rule "ggyu" "っぎゅ"
-    , Rule "ggye" "っぎぇ"
-    , Rule "ggyo" "っぎょ"
-    , Rule "gga" "っが"
-    , Rule "ggi" "っぎ"
-    , Rule "ggu" "っぐ"
-    , Rule "gge" "っげ"
-    , Rule "ggo" "っご"
-    , Rule "ggwa" "っぐぁ"
-    , Rule "ggwi" "っぐぃ"
-    , Rule "ggwu" "っぐぅ"
-    , Rule "ggwe" "っぐぇ"
-    , Rule "ggwo" "っぐぉ"
-    , Rule "ssya" "っしゃ"
-    , Rule "ssyi" "っしぃ"
-    , Rule "ssyu" "っしゅ"
-    , Rule "ssye" "っしぇ"
-    , Rule "ssyo" "っしょ"
-    , Rule "ssha" "っしゃ"
-    , Rule "sshi" "っし"
-    , Rule "sshu" "っしゅ"
-    , Rule "sshe" "っしぇ"
-    , Rule "ssho" "っしょ"
-    , Rule "ssa" "っさ"
-    , Rule "ssi" "っし"
-    , Rule "ssu" "っす"
-    , Rule "sse" "っせ"
-    , Rule "sso" "っそ"
-    , Rule "zzya" "っじゃ"
-    , Rule "zzyi" "っじぃ"
-    , Rule "zzyu" "っじゅ"
-    , Rule "zzye" "っじぇ"
-    , Rule "zzyo" "っじょ"
-    , Rule "zza" "っざ"
-    , Rule "zzi" "っじ"
-    , Rule "zzu" "っず"
-    , Rule "zze" "っぜ"
-    , Rule "zzo" "っぞ"
-    , Rule "jja" "っじゃ"
-    , Rule "jji" "っじ"
-    , Rule "jju" "っじゅ"
-    , Rule "jje" "っじぇ"
-    , Rule "jjo" "っじょ"
-    , Rule "jjya" "っじゃ"
-    , Rule "jjyi" "っじぃ"
-    , Rule "jjyu" "っじゅ"
-    , Rule "jjye" "っじぇ"
-    , Rule "jjyo" "っじょ"
-    , Rule "ttya" "っちゃ"
-    , Rule "ttyi" "っちぃ"
-    , Rule "ttyu" "っちゅ"
-    , Rule "ttye" "っちぇ"
-    , Rule "ttyo" "っちょ"
-    , Rule "ttsa" "っつぁ"
-    , Rule "ttsi" "っつぃ"
-    , Rule "ttse" "っつぇ"
-    , Rule "ttso" "っつぉ"
-    , Rule "ttha" "ってゃ"
-    , Rule "tthi" "ってぃ"
-    , Rule "tthu" "ってゅ"
-    , Rule "tthe" "ってぇ"
-    , Rule "ttho" "ってょ"
-    , Rule "ttwa" "っとぁ"
-    , Rule "ttwi" "っとぃ"
-    , Rule "ttwu" "っとぅ"
-    , Rule "ttwe" "っとぇ"
-    , Rule "ttwo" "っとぉ"
-    , Rule "tta" "った"
-    , Rule "tti" "っち"
-    , Rule "ttu" "っつ"
-    , Rule "ttsu" "っつ"
-    , Rule "tte" "って"
-    , Rule "tto" "っと"
-    , Rule "ddya" "っぢゃ"
-    , Rule "ddyi" "っぢぃ"
-    , Rule "ddyu" "っぢゅ"
-    , Rule "ddye" "っぢぇ"
-    , Rule "ddyo" "っぢょ"
-    , Rule "ddha" "っでゃ"
-    , Rule "ddhi" "っでぃ"
-    , Rule "ddhu" "っでゅ"
-    , Rule "ddhe" "っでぇ"
-    , Rule "ddho" "っでょ"
-    , Rule "ddwa" "っどぁ"
-    , Rule "ddwi" "っどぃ"
-    , Rule "ddwu" "っどぅ"
-    , Rule "ddwe" "っどぇ"
-    , Rule "ddwo" "っどぉ"
-    , Rule "dda" "っだ"
-    , Rule "ddi" "っぢ"
-    , Rule "ddu" "っづ"
-    , Rule "dde" "っで"
-    , Rule "ddo" "っど"
-    , Rule "hhya" "っひゃ"
-    , Rule "hhyi" "っひぃ"
-    , Rule "hhyu" "っひゅ"
-    , Rule "hhye" "っひぇ"
-    , Rule "hhyo" "っひょ"
-    , Rule "hha" "っは"
-    , Rule "hhi" "っひ"
-    , Rule "hhu" "っふ"
-    , Rule "hhe" "っへ"
-    , Rule "hho" "っほ"
-    , Rule "ffa" "っふぁ"
-    , Rule "ffi" "っふぃ"
-    , Rule "ffu" "っふ"
-    , Rule "ffe" "っふぇ"
-    , Rule "ffo" "っふぉ"
-    , Rule "ffya" "っふゃ"
-    , Rule "ffyu" "っふゅ"
-    , Rule "ffyo" "っふょ"
-    , Rule "ffu" "っふ"
-    , Rule "bbya" "っびゃ"
-    , Rule "bbyi" "っびぃ"
-    , Rule "bbyu" "っびゅ"
-    , Rule "bbye" "っびぇ"
-    , Rule "bbyo" "っびょ"
-    , Rule "bba" "っば"
-    , Rule "bbi" "っび"
-    , Rule "bbu" "っぶ"
-    , Rule "bbe" "っべ"
-    , Rule "bbo" "っぼ"
-    , Rule "ppya" "っぴゃ"
-    , Rule "ppyi" "っぴぃ"
-    , Rule "ppyu" "っぴゅ"
-    , Rule "ppye" "っぴぇ"
-    , Rule "ppyo" "っぴょ"
-    , Rule "ppa" "っぱ"
-    , Rule "ppi" "っぴ"
-    , Rule "ppu" "っぷ"
-    , Rule "ppe" "っぺ"
-    , Rule "ppo" "っぽ"
-    , Rule "mmya" "っみゃ"
-    , Rule "mmyi" "っみぃ"
-    , Rule "mmyu" "っみゅ"
-    , Rule "mmye" "っみぇ"
-    , Rule "mmyo" "っみょ"
-    , Rule "mma" "っま"
-    , Rule "mmi" "っみ"
-    , Rule "mmu" "っむ"
-    , Rule "mme" "っめ"
-    , Rule "mmo" "っも"
-    , Rule "yye" "っいぇ"
-    , Rule "yya" "っや"
-    , Rule "yyu" "っゆ"
-    , Rule "yyo" "っよ"
-    , Rule "rrya" "っりゃ"
-    , Rule "rryi" "っりぃ"
-    , Rule "rryu" "っりゅ"
-    , Rule "rrye" "っりぇ"
-    , Rule "rryo" "っりょ"
-    , Rule "rra" "っら"
-    , Rule "rri" "っり"
-    , Rule "rru" "っる"
-    , Rule "rre" "っれ"
-    , Rule "rro" "っろ"
-    , Rule "wwu" "っう"
-    , Rule "wwyi" "っゐ"
-    , Rule "wwye" "っゑ"
-    , Rule "wwa" "っわ"
-    , Rule "wwi" "っうぃ"
-    , Rule "wwe" "っうぇ"
-    , Rule "wwo" "っを"
-    , Rule "wwha" "っうぁ"
-    , Rule "wwhi" "っうぃ"
-    , Rule "wwhu" "っう"
-    , Rule "wwhe" "っうぇ"
-    , Rule "wwho" "っうぉ"
-    , Rule "ccha" "っちゃ"
-    , Rule "cchi" "っち"
-    , Rule "cchu" "っちゅ"
-    , Rule "cche" "っちぇ"
-    , Rule "ccho" "っちょ"
-    , Rule "ccya" "っちゃ"
-    , Rule "ccyi" "っちぃ"
-    , Rule "ccyu" "っちゅ"
-    , Rule "ccye" "っちぇ"
-    , Rule "ccyo" "っちょ"
-    , Rule "cca" "っか"
-    , Rule "cci" "っし"
-    , Rule "ccu" "っく"
-    , Rule "cce" "っせ"
-    , Rule "cco" "っこ"
-    , Rule "a" "a"
-    , Rule "b" "b"
-    , Rule "c" "c"
-    , Rule "d" "d"
-    , Rule "e" "e"
-    , Rule "f" "f"
-    , Rule "g" "g"
-    , Rule "h" "h"
-    , Rule "i" "i"
-    , Rule "j" "j"
-    , Rule "k" "k"
-    , Rule "l" "l"
-    , Rule "m" "m"
-    , Rule "n" "n"
-    , Rule "o" "o"
-    , Rule "p" "p"
-    , Rule "q" "q"
-    , Rule "r" "r"
-    , Rule "s" "s"
-    , Rule "t" "t"
-    , Rule "u" "u"
-    , Rule "v" "v"
-    , Rule "w" "w"
-    , Rule "x" "x"
-    , Rule "y" "y"
-    , Rule "z" "z"
-    , Rule "A" "A"
-    , Rule "B" "B"
-    , Rule "C" "C"
-    , Rule "D" "D"
-    , Rule "E" "E"
-    , Rule "F" "F"
-    , Rule "G" "G"
-    , Rule "H" "H"
-    , Rule "I" "I"
-    , Rule "J" "J"
-    , Rule "K" "K"
-    , Rule "L" "L"
-    , Rule "M" "M"
-    , Rule "N" "N"
-    , Rule "O" "O"
-    , Rule "P" "P"
-    , Rule "Q" "Q"
-    , Rule "R" "R"
-    , Rule "S" "S"
-    , Rule "T" "T"
-    , Rule "U" "U"
-    , Rule "V" "V"
-    , Rule "W" "W"
-    , Rule "X" "X"
-    , Rule "Y" "Y"
-    , Rule "Z" "Z"
-    , Rule "0" "0"
-    , Rule "1" "1"
-    , Rule "2" "2"
-    , Rule "3" "3"
-    , Rule "4" "4"
-    , Rule "5" "5"
-    , Rule "6" "6"
-    , Rule "7" "7"
-    , Rule "8" "8"
-    , Rule "9" "9"
-    , Rule "`" "`"
-    , Rule "~" "~"
-    , Rule "!" "!"
-    , Rule "@" "@"
-    , Rule "#" "#"
-    , Rule "$" "$"
-    , Rule "%" "%"
-    , Rule "^" "^"
-    , Rule "&" "&"
-    , Rule "*" "*"
-    , Rule "(" "("
-    , Rule ")" ")"
-    , Rule "-" "-"
-    , Rule "_" "_"
-    , Rule "=" "="
-    , Rule "+" "+"
-    , Rule "[" "["
-    , Rule "]" "]"
-    , Rule "{" "{"
-    , Rule "}" "}"
-    , Rule "\\" "\\"
-    , Rule "|" "|"
-    , Rule ";" ";"
-    , Rule ":" ":"
-    , Rule "'" "'"
-    , Rule "\"" "\""
-    , Rule "," ","
-    , Rule "<" "<"
-    , Rule "." "."
-    , Rule ">" ">"
-    , Rule "/" "/"
-    , Rule "?" "?"
-    , Rule " " " "
+    [ Rule "-" "ー" 0
+    , Rule "~" "〜" 0
+    , Rule "." "。" 0
+    , Rule "," "、" 0
+    , Rule "[" "「" 0
+    , Rule "]" "」" 0
+    , Rule "va" "ゔぁ" 0
+    , Rule "vi" "ゔぃ" 0
+    , Rule "vu" "ゔ" 0
+    , Rule "ve" "ゔぇ" 0
+    , Rule "vo" "ゔぉ" 0
+    , Rule "vya" "ゔゃ" 0
+    , Rule "vyi" "ゔぃ" 0
+    , Rule "vyu" "ゔゅ" 0
+    , Rule "vye" "ゔぇ" 0
+    , Rule "vyo" "ゔょ" 0
+    , Rule "kya" "きゃ" 0
+    , Rule "kyi" "きぃ" 0
+    , Rule "kyu" "きゅ" 0
+    , Rule "kye" "きぇ" 0
+    , Rule "kyo" "きょ" 0
+    , Rule "gya" "ぎゃ" 0
+    , Rule "gyi" "ぎぃ" 0
+    , Rule "gyu" "ぎゅ" 0
+    , Rule "gye" "ぎぇ" 0
+    , Rule "gyo" "ぎょ" 0
+    , Rule "sya" "しゃ" 0
+    , Rule "syi" "しぃ" 0
+    , Rule "syu" "しゅ" 0
+    , Rule "sye" "しぇ" 0
+    , Rule "syo" "しょ" 0
+    , Rule "sha" "しゃ" 0
+    , Rule "shi" "し" 0
+    , Rule "shu" "しゅ" 0
+    , Rule "she" "しぇ" 0
+    , Rule "sho" "しょ" 0
+    , Rule "zya" "じゃ" 0
+    , Rule "zyi" "じぃ" 0
+    , Rule "zyu" "じゅ" 0
+    , Rule "zye" "じぇ" 0
+    , Rule "zyo" "じょ" 0
+    , Rule "tya" "ちゃ" 0
+    , Rule "tyi" "ちぃ" 0
+    , Rule "tyu" "ちゅ" 0
+    , Rule "tye" "ちぇ" 0
+    , Rule "tyo" "ちょ" 0
+    , Rule "cha" "ちゃ" 0
+    , Rule "chi" "ち" 0
+    , Rule "chu" "ちゅ" 0
+    , Rule "che" "ちぇ" 0
+    , Rule "cho" "ちょ" 0
+    , Rule "cya" "ちゃ" 0
+    , Rule "cyi" "ちぃ" 0
+    , Rule "cyu" "ちゅ" 0
+    , Rule "cye" "ちぇ" 0
+    , Rule "cyo" "ちょ" 0
+    , Rule "dya" "ぢゃ" 0
+    , Rule "dyi" "ぢぃ" 0
+    , Rule "dyu" "ぢゅ" 0
+    , Rule "dye" "ぢぇ" 0
+    , Rule "dyo" "ぢょ" 0
+    , Rule "tsa" "つぁ" 0
+    , Rule "tsi" "つぃ" 0
+    , Rule "tse" "つぇ" 0
+    , Rule "tso" "つぉ" 0
+    , Rule "tha" "てゃ" 0
+    , Rule "thi" "てぃ" 0
+    , Rule "thu" "てゅ" 0
+    , Rule "the" "てぇ" 0
+    , Rule "tho" "てょ" 0
+    , Rule "dha" "でゃ" 0
+    , Rule "dhi" "でぃ" 0
+    , Rule "dhu" "でゅ" 0
+    , Rule "dhe" "でぇ" 0
+    , Rule "dho" "でょ" 0
+    , Rule "twa" "とぁ" 0
+    , Rule "twi" "とぃ" 0
+    , Rule "twu" "とぅ" 0
+    , Rule "twe" "とぇ" 0
+    , Rule "two" "とぉ" 0
+    , Rule "dwa" "どぁ" 0
+    , Rule "dwi" "どぃ" 0
+    , Rule "dwu" "どぅ" 0
+    , Rule "dwe" "どぇ" 0
+    , Rule "dwo" "どぉ" 0
+    , Rule "nya" "にゃ" 0
+    , Rule "nyi" "にぃ" 0
+    , Rule "nyu" "にゅ" 0
+    , Rule "nye" "にぇ" 0
+    , Rule "nyo" "にょ" 0
+    , Rule "hya" "ひゃ" 0
+    , Rule "hyi" "ひぃ" 0
+    , Rule "hyu" "ひゅ" 0
+    , Rule "hye" "ひぇ" 0
+    , Rule "hyo" "ひょ" 0
+    , Rule "bya" "びゃ" 0
+    , Rule "byi" "びぃ" 0
+    , Rule "byu" "びゅ" 0
+    , Rule "bye" "びぇ" 0
+    , Rule "byo" "びょ" 0
+    , Rule "pya" "ぴゃ" 0
+    , Rule "pyi" "ぴぃ" 0
+    , Rule "pyu" "ぴゅ" 0
+    , Rule "pye" "ぴぇ" 0
+    , Rule "pyo" "ぴょ" 0
+    , Rule "fa" "ふぁ" 0
+    , Rule "fi" "ふぃ" 0
+    , Rule "fu" "ふ" 0
+    , Rule "fe" "ふぇ" 0
+    , Rule "fo" "ふぉ" 0
+    , Rule "fya" "ふゃ" 0
+    , Rule "fyu" "ふゅ" 0
+    , Rule "fyo" "ふょ" 0
+    , Rule "mya" "みゃ" 0
+    , Rule "myi" "みぃ" 0
+    , Rule "myu" "みゅ" 0
+    , Rule "mye" "みぇ" 0
+    , Rule "myo" "みょ" 0
+    , Rule "rya" "りゃ" 0
+    , Rule "ryi" "りぃ" 0
+    , Rule "ryu" "りゅ" 0
+    , Rule "rye" "りぇ" 0
+    , Rule "ryo" "りょ" 0
+    , Rule "nn" "ん" 0
+    , Rule "n" "ん" 0
+    , Rule "xn" "ん" 0
+    , Rule "a" "あ" 0
+    , Rule "i" "い" 0
+    , Rule "u" "う" 0
+    , Rule "wu" "う" 0
+    , Rule "e" "え" 0
+    , Rule "o" "お" 0
+    , Rule "xa" "ぁ" 0
+    , Rule "xi" "ぃ" 0
+    , Rule "xu" "ぅ" 0
+    , Rule "xe" "ぇ" 0
+    , Rule "xo" "ぉ" 0
+    , Rule "la" "ぁ" 0
+    , Rule "li" "ぃ" 0
+    , Rule "lu" "ぅ" 0
+    , Rule "le" "ぇ" 0
+    , Rule "lo" "ぉ" 0
+    , Rule "lyi" "ぃ" 0
+    , Rule "xyi" "ぃ" 0
+    , Rule "lye" "ぇ" 0
+    , Rule "xye" "ぇ" 0
+    , Rule "ye" "いぇ" 0
+    , Rule "ka" "か" 0
+    , Rule "ki" "き" 0
+    , Rule "ku" "く" 0
+    , Rule "ke" "け" 0
+    , Rule "ko" "こ" 0
+    , Rule "xka" "ヵ" 0
+    , Rule "xke" "ヶ" 0
+    , Rule "lka" "ヵ" 0
+    , Rule "lke" "ヶ" 0
+    , Rule "ga" "が" 0
+    , Rule "gi" "ぎ" 0
+    , Rule "gu" "ぐ" 0
+    , Rule "ge" "げ" 0
+    , Rule "go" "ご" 0
+    , Rule "sa" "さ" 0
+    , Rule "si" "し" 0
+    , Rule "su" "す" 0
+    , Rule "se" "せ" 0
+    , Rule "so" "そ" 0
+    , Rule "ca" "か" 0
+    , Rule "ci" "し" 0
+    , Rule "cu" "く" 0
+    , Rule "ce" "せ" 0
+    , Rule "co" "こ" 0
+    , Rule "qa" "くぁ" 0
+    , Rule "qi" "くぃ" 0
+    , Rule "qu" "く" 0
+    , Rule "qe" "くぇ" 0
+    , Rule "qo" "くぉ" 0
+    , Rule "kwa" "くぁ" 0
+    , Rule "gwa" "ぐぁ" 0
+    , Rule "gwi" "ぐぃ" 0
+    , Rule "gwu" "ぐぅ" 0
+    , Rule "gwe" "ぐぇ" 0
+    , Rule "gwo" "ぐぉ" 0
+    , Rule "za" "ざ" 0
+    , Rule "zi" "じ" 0
+    , Rule "zu" "ず" 0
+    , Rule "ze" "ぜ" 0
+    , Rule "zo" "ぞ" 0
+    , Rule "ja" "じゃ" 0
+    , Rule "ji" "じ" 0
+    , Rule "ju" "じゅ" 0
+    , Rule "je" "じぇ" 0
+    , Rule "jo" "じょ" 0
+    , Rule "jya" "じゃ" 0
+    , Rule "jyi" "じぃ" 0
+    , Rule "jyu" "じゅ" 0
+    , Rule "jye" "じぇ" 0
+    , Rule "jyo" "じょ" 0
+    , Rule "ta" "た" 0
+    , Rule "ti" "ち" 0
+    , Rule "tu" "つ" 0
+    , Rule "tsu" "つ" 0
+    , Rule "te" "て" 0
+    , Rule "to" "と" 0
+    , Rule "da" "だ" 0
+    , Rule "di" "ぢ" 0
+    , Rule "du" "づ" 0
+    , Rule "de" "で" 0
+    , Rule "do" "ど" 0
+    , Rule "xtu" "っ" 0
+    , Rule "xtsu" "っ" 0
+    , Rule "ltu" "っ" 0
+    , Rule "ltsu" "っ" 0
+    , Rule "na" "な" 0
+    , Rule "ni" "に" 0
+    , Rule "nu" "ぬ" 0
+    , Rule "ne" "ね" 0
+    , Rule "no" "の" 0
+    , Rule "ha" "は" 0
+    , Rule "hi" "ひ" 0
+    , Rule "hu" "ふ" 0
+    , Rule "fu" "ふ" 0
+    , Rule "he" "へ" 0
+    , Rule "ho" "ほ" 0
+    , Rule "ba" "ば" 0
+    , Rule "bi" "び" 0
+    , Rule "bu" "ぶ" 0
+    , Rule "be" "べ" 0
+    , Rule "bo" "ぼ" 0
+    , Rule "pa" "ぱ" 0
+    , Rule "pi" "ぴ" 0
+    , Rule "pu" "ぷ" 0
+    , Rule "pe" "ぺ" 0
+    , Rule "po" "ぽ" 0
+    , Rule "ma" "ま" 0
+    , Rule "mi" "み" 0
+    , Rule "mu" "む" 0
+    , Rule "me" "め" 0
+    , Rule "mo" "も" 0
+    , Rule "xya" "ゃ" 0
+    , Rule "lya" "ゃ" 0
+    , Rule "ya" "や" 0
+    , Rule "wyi" "ゐ" 0
+    , Rule "xyu" "ゅ" 0
+    , Rule "lyu" "ゅ" 0
+    , Rule "yu" "ゆ" 0
+    , Rule "wye" "ゑ" 0
+    , Rule "xyo" "ょ" 0
+    , Rule "lyo" "ょ" 0
+    , Rule "yo" "よ" 0
+    , Rule "ra" "ら" 0
+    , Rule "ri" "り" 0
+    , Rule "ru" "る" 0
+    , Rule "re" "れ" 0
+    , Rule "ro" "ろ" 0
+    , Rule "xwa" "ゎ" 0
+    , Rule "lwa" "ゎ" 0
+    , Rule "wa" "わ" 0
+    , Rule "wi" "うぃ" 0
+    , Rule "we" "うぇ" 0
+    , Rule "wo" "を" 0
+    , Rule "wha" "うぁ" 0
+    , Rule "whi" "うぃ" 0
+    , Rule "whu" "う" 0
+    , Rule "whe" "うぇ" 0
+    , Rule "who" "うぉ" 0
+    , Rule "qqa" "っくぁ" 0
+    , Rule "qqi" "っくぃ" 0
+    , Rule "qqu" "っく" 0
+    , Rule "qqe" "っくぇ" 0
+    , Rule "qqo" "っくぉ" 0
+    , Rule "vva" "っゔぁ" 0
+    , Rule "vvi" "っゔぃ" 0
+    , Rule "vvu" "っゔ" 0
+    , Rule "vve" "っゔぇ" 0
+    , Rule "vvo" "っゔぉ" 0
+    , Rule "vvya" "っゔゃ" 0
+    , Rule "vvyi" "っゔぃ" 0
+    , Rule "vvyu" "っゔゅ" 0
+    , Rule "vvye" "っゔぇ" 0
+    , Rule "vvyo" "っゔょ" 0
+    , Rule "lla" "っぁ" 0
+    , Rule "lli" "っぃ" 0
+    , Rule "llu" "っぅ" 0
+    , Rule "lle" "っぇ" 0
+    , Rule "llo" "っぉ" 0
+    , Rule "llyi" "っぃ" 0
+    , Rule "llye" "っぇ" 0
+    , Rule "llka" "っヵ" 0
+    , Rule "llke" "っヶ" 0
+    , Rule "lltu" "っっ" 0
+    , Rule "llya" "っゃ" 0
+    , Rule "llyu" "っゅ" 0
+    , Rule "llyo" "っょ" 0
+    , Rule "llwa" "っゎ" 0
+    , Rule "xxn" "っん" 0
+    , Rule "xxa" "っぁ" 0
+    , Rule "xxi" "っぃ" 0
+    , Rule "xxu" "っぅ" 0
+    , Rule "xxe" "っぇ" 0
+    , Rule "xxo" "っぉ" 0
+    , Rule "xxyi" "っぃ" 0
+    , Rule "xxye" "っぇ" 0
+    , Rule "xxka" "っヵ" 0
+    , Rule "xxke" "っヶ" 0
+    , Rule "xxtu" "っっ" 0
+    , Rule "xxya" "っゃ" 0
+    , Rule "xxyu" "っゅ" 0
+    , Rule "xxyo" "っょ" 0
+    , Rule "xxwa" "っゎ" 0
+    , Rule "kkya" "っきゃ" 0
+    , Rule "kkyi" "っきぃ" 0
+    , Rule "kkyu" "っきゅ" 0
+    , Rule "kkye" "っきぇ" 0
+    , Rule "kkyo" "っきょ" 0
+    , Rule "kka" "っか" 0
+    , Rule "kki" "っき" 0
+    , Rule "kku" "っく" 0
+    , Rule "kke" "っけ" 0
+    , Rule "kko" "っこ" 0
+    , Rule "kkwa" "っくぁ" 0
+    , Rule "ggya" "っぎゃ" 0
+    , Rule "ggyi" "っぎぃ" 0
+    , Rule "ggyu" "っぎゅ" 0
+    , Rule "ggye" "っぎぇ" 0
+    , Rule "ggyo" "っぎょ" 0
+    , Rule "gga" "っが" 0
+    , Rule "ggi" "っぎ" 0
+    , Rule "ggu" "っぐ" 0
+    , Rule "gge" "っげ" 0
+    , Rule "ggo" "っご" 0
+    , Rule "ggwa" "っぐぁ" 0
+    , Rule "ggwi" "っぐぃ" 0
+    , Rule "ggwu" "っぐぅ" 0
+    , Rule "ggwe" "っぐぇ" 0
+    , Rule "ggwo" "っぐぉ" 0
+    , Rule "ssya" "っしゃ" 0
+    , Rule "ssyi" "っしぃ" 0
+    , Rule "ssyu" "っしゅ" 0
+    , Rule "ssye" "っしぇ" 0
+    , Rule "ssyo" "っしょ" 0
+    , Rule "ssha" "っしゃ" 0
+    , Rule "sshi" "っし" 0
+    , Rule "sshu" "っしゅ" 0
+    , Rule "sshe" "っしぇ" 0
+    , Rule "ssho" "っしょ" 0
+    , Rule "ssa" "っさ" 0
+    , Rule "ssi" "っし" 0
+    , Rule "ssu" "っす" 0
+    , Rule "sse" "っせ" 0
+    , Rule "sso" "っそ" 0
+    , Rule "zzya" "っじゃ" 0
+    , Rule "zzyi" "っじぃ" 0
+    , Rule "zzyu" "っじゅ" 0
+    , Rule "zzye" "っじぇ" 0
+    , Rule "zzyo" "っじょ" 0
+    , Rule "zza" "っざ" 0
+    , Rule "zzi" "っじ" 0
+    , Rule "zzu" "っず" 0
+    , Rule "zze" "っぜ" 0
+    , Rule "zzo" "っぞ" 0
+    , Rule "jja" "っじゃ" 0
+    , Rule "jji" "っじ" 0
+    , Rule "jju" "っじゅ" 0
+    , Rule "jje" "っじぇ" 0
+    , Rule "jjo" "っじょ" 0
+    , Rule "jjya" "っじゃ" 0
+    , Rule "jjyi" "っじぃ" 0
+    , Rule "jjyu" "っじゅ" 0
+    , Rule "jjye" "っじぇ" 0
+    , Rule "jjyo" "っじょ" 0
+    , Rule "ttya" "っちゃ" 0
+    , Rule "ttyi" "っちぃ" 0
+    , Rule "ttyu" "っちゅ" 0
+    , Rule "ttye" "っちぇ" 0
+    , Rule "ttyo" "っちょ" 0
+    , Rule "ttsa" "っつぁ" 0
+    , Rule "ttsi" "っつぃ" 0
+    , Rule "ttse" "っつぇ" 0
+    , Rule "ttso" "っつぉ" 0
+    , Rule "ttha" "ってゃ" 0
+    , Rule "tthi" "ってぃ" 0
+    , Rule "tthu" "ってゅ" 0
+    , Rule "tthe" "ってぇ" 0
+    , Rule "ttho" "ってょ" 0
+    , Rule "ttwa" "っとぁ" 0
+    , Rule "ttwi" "っとぃ" 0
+    , Rule "ttwu" "っとぅ" 0
+    , Rule "ttwe" "っとぇ" 0
+    , Rule "ttwo" "っとぉ" 0
+    , Rule "tta" "った" 0
+    , Rule "tti" "っち" 0
+    , Rule "ttu" "っつ" 0
+    , Rule "ttsu" "っつ" 0
+    , Rule "tte" "って" 0
+    , Rule "tto" "っと" 0
+    , Rule "ddya" "っぢゃ" 0
+    , Rule "ddyi" "っぢぃ" 0
+    , Rule "ddyu" "っぢゅ" 0
+    , Rule "ddye" "っぢぇ" 0
+    , Rule "ddyo" "っぢょ" 0
+    , Rule "ddha" "っでゃ" 0
+    , Rule "ddhi" "っでぃ" 0
+    , Rule "ddhu" "っでゅ" 0
+    , Rule "ddhe" "っでぇ" 0
+    , Rule "ddho" "っでょ" 0
+    , Rule "ddwa" "っどぁ" 0
+    , Rule "ddwi" "っどぃ" 0
+    , Rule "ddwu" "っどぅ" 0
+    , Rule "ddwe" "っどぇ" 0
+    , Rule "ddwo" "っどぉ" 0
+    , Rule "dda" "っだ" 0
+    , Rule "ddi" "っぢ" 0
+    , Rule "ddu" "っづ" 0
+    , Rule "dde" "っで" 0
+    , Rule "ddo" "っど" 0
+    , Rule "hhya" "っひゃ" 0
+    , Rule "hhyi" "っひぃ" 0
+    , Rule "hhyu" "っひゅ" 0
+    , Rule "hhye" "っひぇ" 0
+    , Rule "hhyo" "っひょ" 0
+    , Rule "hha" "っは" 0
+    , Rule "hhi" "っひ" 0
+    , Rule "hhu" "っふ" 0
+    , Rule "hhe" "っへ" 0
+    , Rule "hho" "っほ" 0
+    , Rule "ffa" "っふぁ" 0
+    , Rule "ffi" "っふぃ" 0
+    , Rule "ffu" "っふ" 0
+    , Rule "ffe" "っふぇ" 0
+    , Rule "ffo" "っふぉ" 0
+    , Rule "ffya" "っふゃ" 0
+    , Rule "ffyu" "っふゅ" 0
+    , Rule "ffyo" "っふょ" 0
+    , Rule "ffu" "っふ" 0
+    , Rule "bbya" "っびゃ" 0
+    , Rule "bbyi" "っびぃ" 0
+    , Rule "bbyu" "っびゅ" 0
+    , Rule "bbye" "っびぇ" 0
+    , Rule "bbyo" "っびょ" 0
+    , Rule "bba" "っば" 0
+    , Rule "bbi" "っび" 0
+    , Rule "bbu" "っぶ" 0
+    , Rule "bbe" "っべ" 0
+    , Rule "bbo" "っぼ" 0
+    , Rule "ppya" "っぴゃ" 0
+    , Rule "ppyi" "っぴぃ" 0
+    , Rule "ppyu" "っぴゅ" 0
+    , Rule "ppye" "っぴぇ" 0
+    , Rule "ppyo" "っぴょ" 0
+    , Rule "ppa" "っぱ" 0
+    , Rule "ppi" "っぴ" 0
+    , Rule "ppu" "っぷ" 0
+    , Rule "ppe" "っぺ" 0
+    , Rule "ppo" "っぽ" 0
+    , Rule "mmya" "っみゃ" 0
+    , Rule "mmyi" "っみぃ" 0
+    , Rule "mmyu" "っみゅ" 0
+    , Rule "mmye" "っみぇ" 0
+    , Rule "mmyo" "っみょ" 0
+    , Rule "mma" "っま" 0
+    , Rule "mmi" "っみ" 0
+    , Rule "mmu" "っむ" 0
+    , Rule "mme" "っめ" 0
+    , Rule "mmo" "っも" 0
+    , Rule "yye" "っいぇ" 0
+    , Rule "yya" "っや" 0
+    , Rule "yyu" "っゆ" 0
+    , Rule "yyo" "っよ" 0
+    , Rule "rrya" "っりゃ" 0
+    , Rule "rryi" "っりぃ" 0
+    , Rule "rryu" "っりゅ" 0
+    , Rule "rrye" "っりぇ" 0
+    , Rule "rryo" "っりょ" 0
+    , Rule "rra" "っら" 0
+    , Rule "rri" "っり" 0
+    , Rule "rru" "っる" 0
+    , Rule "rre" "っれ" 0
+    , Rule "rro" "っろ" 0
+    , Rule "wwu" "っう" 0
+    , Rule "wwyi" "っゐ" 0
+    , Rule "wwye" "っゑ" 0
+    , Rule "wwa" "っわ" 0
+    , Rule "wwi" "っうぃ" 0
+    , Rule "wwe" "っうぇ" 0
+    , Rule "wwo" "っを" 0
+    , Rule "wwha" "っうぁ" 0
+    , Rule "wwhi" "っうぃ" 0
+    , Rule "wwhu" "っう" 0
+    , Rule "wwhe" "っうぇ" 0
+    , Rule "wwho" "っうぉ" 0
+    , Rule "ccha" "っちゃ" 0
+    , Rule "cchi" "っち" 0
+    , Rule "cchu" "っちゅ" 0
+    , Rule "cche" "っちぇ" 0
+    , Rule "ccho" "っちょ" 0
+    , Rule "ccya" "っちゃ" 0
+    , Rule "ccyi" "っちぃ" 0
+    , Rule "ccyu" "っちゅ" 0
+    , Rule "ccye" "っちぇ" 0
+    , Rule "ccyo" "っちょ" 0
+    , Rule "cca" "っか" 0
+    , Rule "cci" "っし" 0
+    , Rule "ccu" "っく" 0
+    , Rule "cce" "っせ" 0
+    , Rule "cco" "っこ" 0
+    , Rule "a" "a" 0
+    , Rule "b" "b" 0
+    , Rule "c" "c" 0
+    , Rule "d" "d" 0
+    , Rule "e" "e" 0
+    , Rule "f" "f" 0
+    , Rule "g" "g" 0
+    , Rule "h" "h" 0
+    , Rule "i" "i" 0
+    , Rule "j" "j" 0
+    , Rule "k" "k" 0
+    , Rule "l" "l" 0
+    , Rule "m" "m" 0
+    , Rule "n" "n" 0
+    , Rule "o" "o" 0
+    , Rule "p" "p" 0
+    , Rule "q" "q" 0
+    , Rule "r" "r" 0
+    , Rule "s" "s" 0
+    , Rule "t" "t" 0
+    , Rule "u" "u" 0
+    , Rule "v" "v" 0
+    , Rule "w" "w" 0
+    , Rule "x" "x" 0
+    , Rule "y" "y" 0
+    , Rule "z" "z" 0
+    , Rule "A" "A" 0
+    , Rule "B" "B" 0
+    , Rule "C" "C" 0
+    , Rule "D" "D" 0
+    , Rule "E" "E" 0
+    , Rule "F" "F" 0
+    , Rule "G" "G" 0
+    , Rule "H" "H" 0
+    , Rule "I" "I" 0
+    , Rule "J" "J" 0
+    , Rule "K" "K" 0
+    , Rule "L" "L" 0
+    , Rule "M" "M" 0
+    , Rule "N" "N" 0
+    , Rule "O" "O" 0
+    , Rule "P" "P" 0
+    , Rule "Q" "Q" 0
+    , Rule "R" "R" 0
+    , Rule "S" "S" 0
+    , Rule "T" "T" 0
+    , Rule "U" "U" 0
+    , Rule "V" "V" 0
+    , Rule "W" "W" 0
+    , Rule "X" "X" 0
+    , Rule "Y" "Y" 0
+    , Rule "Z" "Z" 0
+    , Rule "0" "0" 0
+    , Rule "1" "1" 0
+    , Rule "2" "2" 0
+    , Rule "3" "3" 0
+    , Rule "4" "4" 0
+    , Rule "5" "5" 0
+    , Rule "6" "6" 0
+    , Rule "7" "7" 0
+    , Rule "8" "8" 0
+    , Rule "9" "9" 0
+    , Rule "`" "`" 0
+    , Rule "~" "~" 0
+    , Rule "!" "!" 0
+    , Rule "@" "@" 0
+    , Rule "#" "#" 0
+    , Rule "$" "$" 0
+    , Rule "%" "%" 0
+    , Rule "^" "^" 0
+    , Rule "&" "&" 0
+    , Rule "*" "*" 0
+    , Rule "(" "(" 0
+    , Rule ")" ")" 0
+    , Rule "-" "-" 0
+    , Rule "_" "_" 0
+    , Rule "=" "=" 0
+    , Rule "+" "+" 0
+    , Rule "[" "[" 0
+    , Rule "]" "]" 0
+    , Rule "{" "{" 0
+    , Rule "}" "}" 0
+    , Rule "\\" "\\" 0
+    , Rule "|" "|" 0
+    , Rule ";" ";" 0
+    , Rule ":" ":" 0
+    , Rule "'" "'" 0
+    , Rule "\"" "\"" 0
+    , Rule "," "," 0
+    , Rule "<" "<" 0
+    , Rule "." "." 0
+    , Rule ">" ">" 0
+    , Rule "/" "/" 0
+    , Rule "?" "?" 0
+    , Rule " " " " 0
     ]
 
 
@@ -640,6 +649,7 @@ type Data
         , convertBuf : ConvertBuf
         , state : State
         , history : String
+        , rules : List Rule
         }
 
 
@@ -650,14 +660,15 @@ type State
     | Finish
 
 
-newData : String -> Data
-newData words =
+newData : String -> Rules -> Data
+newData words rules =
     Data
         { fixedWords = ""
         , restWords = words
-        , convertBuf = ConvertBuf "" Nothing romanTable
+        , convertBuf = ConvertBuf "" Nothing rules
         , state = Waiting
         , history = ""
+        , rules = rules
         }
 
 
@@ -679,7 +690,7 @@ nextData fixedRule (Data data) =
             ConvertBuf
                 ""
                 Nothing
-                romanTable
+                data.rules
         , state =
             if String.length newRest == 0 then
                 Finish
@@ -687,6 +698,7 @@ nextData fixedRule (Data data) =
             else
                 Typing
         , history = data.history ++ fixedRule.input
+        , rules = data.rules
         }
 
 
@@ -768,98 +780,125 @@ typeTo input (Data data) =
 
 
 type alias PrintRule =
-    { rule : Rule
+    { input : String
+    , output : String
     , priority : Int
     }
 
 
-type alias PrintRules =
-    List PrintRule
-
-
-newPrintRules : PrintRules
-newPrintRules =
-    List.map (\r -> { rule = r, priority = 0 }) romanTable
-
-
-defaultPriorities : List ( String, Int )
+defaultPriorities : List PrintRule
 defaultPriorities =
-    [ ( "ja", 3 )
-    , ( "zya", 2 )
-    , ( "jya", 1 )
-    , ( "n", 3 )
-    , ( "xn", 2 )
+    [ PrintRule "ja" "じゃ" 3
+    , PrintRule "zya" "じゃ" 2
+    , PrintRule "jya" "じゃ" 1
+    , PrintRule "xn" "ん" 3
+    , PrintRule "n" "ん" 2
     ]
 
 
-setPriorities : List ( String, Int ) -> PrintRules -> PrintRules
-setPriorities priorities printRules =
+setPriorities : List PrintRule -> Rules -> Rules
+setPriorities printRules rules =
     let
-        getPriority : PrintRule -> List ( String, Int ) -> Int
-        getPriority pr ps =
-            case ps of
+        getPriority : Rule -> List PrintRule -> Int
+        getPriority rule prs =
+            case prs of
                 [] ->
-                    pr.priority
+                    rule.priority
 
                 x :: xs ->
-                    if pr.rule.input == Tuple.first x then
-                        Tuple.second x
+                    if rule.input == x.input && rule.output == x.output then
+                        x.priority
 
                     else
-                        getPriority pr xs
+                        getPriority rule xs
 
-        sf : PrintRule -> PrintRule -> Order
+        sf : Rule -> Rule -> Order
         sf a b =
             compare b.priority a.priority
     in
     List.map
-        (\r ->
-            { r | priority = getPriority r priorities }
+        (\rule ->
+            { rule | priority = getPriority rule printRules }
         )
-        printRules
+        rules
         |> List.sortWith sf
 
 
-makeRomaji_ : Data -> PrintRules -> PrintRules -> String
-makeRomaji_ data trialRules originalRules =
-    case trialRules of
-        [] ->
-            "!error"
+dropHead : String -> String -> String
+dropHead head str =
+    if String.startsWith head str then
+        String.dropLeft (String.length head) str
 
-        x :: xs ->
-            if String.startsWith x.rule.output (getRest data) == True then
-                let
-                    -- 仮確定なら進めてしまう。makeROmaji_は(Bool, String)を戻り値にすべきかも。
-                    -- という予測
-                    typedData =
-                        typeTo x.rule.input data
-                in
-                case getState typedData of
-                    Miss ->
-                        makeRomaji_ data xs originalRules
-
-                    Finish ->
-                        getHistory typedData
-
-                    _ ->
-                        makeRomaji_ typedData originalRules originalRules
-
-            else
-                makeRomaji_ data xs originalRules
+    else
+        str
 
 
-makeRomaji : Data -> PrintRules -> String
-makeRomaji data printRules =
-    makeRomaji_ data printRules printRules
+makeRomaji_ : Data -> List Rule -> Maybe Data
+makeRomaji_ (Data data) candidates =
+    case data.state of
+        Finish ->
+            Just (Data data)
+
+        Miss ->
+            Nothing
+
+        _ ->
+            case candidates of
+                [] ->
+                    Nothing
+
+                c :: cs ->
+                    let
+                        input =
+                            dropHead data.convertBuf.inputBuffer c.input
+
+                        nd =
+                            typeTo input (Data data)
+
+                        rest =
+                            String.dropLeft (String.length c.output) data.restWords
+
+                        nc =
+                            List.filter (\r -> String.startsWith r.output rest) data.rules
+                    in
+                    case makeRomaji_ nd nc of
+                        Nothing ->
+                            makeRomaji_ (Data data) cs
+
+                        Just rd ->
+                            Just rd
+
+
+makeRomaji : Data -> Maybe String
+makeRomaji (Data data) =
+    let
+        candidates =
+            List.filter (\r -> String.startsWith r.output data.restWords) data.convertBuf.candidates
+    in
+    makeRomaji_ (Data { data | history = "" }) candidates
+        |> Maybe.map (\(Data fd) -> fd.history)
+
+
+debugData (Data data) =
+    { fixedWords = data.fixedWords
+    , restWords = data.restWords
+    , state = data.state
+    , history = data.history
+    , inputBuffer = data.convertBuf.inputBuffer
+    , tmpFixed = data.convertBuf.tmpFixed
+    }
 
 
 hoge =
     let
+        myRules =
+            romanTable
+                |> setPriorities defaultPriorities
+
         data =
-            newData "じゃんけんじゃん"
-                |> typeTo "z"
-                |> Debug.log ""
+            newData "あいうえお" myRules
+                |> typeTo "a"
+                |> makeRomaji
+                |> Debug.log "romaji:"
     in
-    newPrintRules
-        |> setPriorities defaultPriorities
-        |> makeRomaji data
+    "hoge"

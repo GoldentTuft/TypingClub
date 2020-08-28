@@ -5,6 +5,37 @@ import Test exposing (..)
 import Typing2 as Typing
 
 
+
+-- testGetWantingKeys : Test
+-- testGetWantingKeys =
+--     let
+--         testList =
+--             [ { word = "じゃ", input = "z", expect = Just "ya" }
+--             , { word = "じゃ", input = "zya", expect = Nothing }
+--             , { word = "じゃ", input = "j", expect = Just "a" }
+--             , { word = "じゃ", input = "ji", expect = Nothing }
+--             , { word = "じゃん", input = "jan", expect = Just "n" }
+--             ]
+--     in
+--     describe "Test getWantingKeys"
+--         (List.map
+--             (\testItem ->
+--                 test ("test " ++ testItem.word ++ ", " ++ testItem.input) <|
+--                     \_ ->
+--                         let
+--                             printRules =
+--                                 Typing.newPrintRules
+--                                     |> Typing.setPriorities Typing.defaultPriorities
+--                         in
+--                         Typing.newData testItem.word
+--                             |> typeAllKeys2 testItem.input
+--                             |> Typing.getWantingKeys__test printRules
+--                             |> Expect.equal testItem.expect
+--             )
+--             testList
+--         )
+
+
 testGetHistory : Test
 testGetHistory =
     let
@@ -18,7 +49,7 @@ testGetHistory =
             (\testItem ->
                 test ("test " ++ testItem.word) <|
                     \_ ->
-                        Typing.newData testItem.word
+                        Typing.newData testItem.word Typing.romanTable
                             |> typeAllKeys2 testItem.input
                             |> Typing.getHistory
                             |> Expect.equal testItem.input
@@ -28,29 +59,51 @@ testGetHistory =
 
 
 type alias MakeRomajiTestData =
-    { input : String
-    , expect : String
+    { rules : Typing.Rules
+    , word : String
+    , input : String
+    , expect : Maybe String
     }
 
 
 testMakeRomaji : Test
 testMakeRomaji =
     let
-        kanas =
-            [ MakeRomajiTestData "あいうえお" "aiueo"
+        myRules1 =
+            Typing.setPriorities Typing.defaultPriorities Typing.romanTable
+
+        myRules2 =
+            Typing.setPriorities
+                [ Typing.PrintRule "n" "ん" 3
+                , Typing.PrintRule "xn" "ん" 2
+                , Typing.PrintRule "nn" "ん" 1
+                ]
+                Typing.romanTable
+
+        testList =
+            [ MakeRomajiTestData myRules1 "あいうえお" "" (Just "aiueo")
+            , MakeRomajiTestData myRules1 "あか" "aka" (Just "")
+            , MakeRomajiTestData myRules1 "じゃ" "z" (Just "zya")
+            , MakeRomajiTestData myRules1 "み" "t" Nothing
+            , MakeRomajiTestData myRules2 "んあ" "" (Just "xna")
+            , MakeRomajiTestData myRules2 "んあ" "n" (Just "nna")
+            , MakeRomajiTestData myRules2 "んか" "" (Just "nka")
             ]
     in
     describe "Test makeRomaji"
         (List.map
-            (\kana ->
-                test ("test " ++ kana.input) <|
+            (\testItem ->
+                test ("test " ++ testItem.word ++ "(" ++ testItem.input ++ ")") <|
                     \_ ->
-                        Typing.newPrintRules
-                            |> Typing.setPriorities Typing.defaultPriorities
-                            |> Typing.makeRomaji (Typing.newData kana.input)
-                            |> Expect.equal kana.expect
+                        let
+                            data =
+                                Typing.newData testItem.word testItem.rules
+                                    |> typeAllKeys2 testItem.input
+                        in
+                        Typing.makeRomaji data
+                            |> Expect.equal testItem.expect
             )
-            kanas
+            testList
         )
 
 
@@ -299,26 +352,26 @@ testReject words inputs =
     List.map (testRejectHelp words) inputs
 
 
-jikken =
-    test "jikken" <|
-        \_ ->
-            let
-                d1 =
-                    Typing.newData "ん"
 
-                d2 =
-                    Typing.typeTo "n" d1
-                        |> Typing.typeTo "k"
-                        |> Debug.log "k"
-            in
-            Expect.pass
+-- jikken =
+--     test "jikken" <|
+--         \_ ->
+--             let
+--                 d1 =
+--                     Typing.newData "ん"
+--                 d2 =
+--                     Typing.typeTo "n" d1
+--                         |> Typing.typeTo "k"
+--                         |> Debug.log "k"
+--             in
+--             Expect.pass
 
 
 typeAllKeys : String -> String -> ( Typing.Data, List Typing.State )
 typeAllKeys input words =
     let
         first =
-            ( Typing.newData words, [] )
+            ( Typing.newData words Typing.romanTable, [] )
 
         keys =
             String.split "" input

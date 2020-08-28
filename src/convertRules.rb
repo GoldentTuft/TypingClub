@@ -45,6 +45,6 @@ open("outputRules.txt", "w") {|f|
       # これはだめだ
       next
     end
-    f.puts ", Rule \"#{input}\" \"#{output}\""
+    f.puts ", Rule \"#{input}\" \"#{output}\" 0"
   }
 }
