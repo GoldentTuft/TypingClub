@@ -18,6 +18,8 @@ module Typing2 exposing
     , typeTo
     )
 
+import Html exposing (a)
+
 
 type alias Rule =
     { input : String
@@ -697,7 +699,7 @@ nextData fixedRule (Data data) =
 
             else
                 Typing
-        , history = data.history ++ fixedRule.input
+        , history = data.history
         , rules = data.rules
         }
 
@@ -719,11 +721,17 @@ getRest (Data data) =
 
 getHistory : Data -> String
 getHistory (Data data) =
-    data.history ++ data.convertBuf.inputBuffer
+    data.history
 
 
 typeTo : String -> Data -> Data
 typeTo input (Data data) =
+    Data { data | history = data.history ++ input }
+        |> typeTo_ input
+
+
+typeTo_ : String -> Data -> Data
+typeTo_ input (Data data) =
     let
         sumInput =
             data.convertBuf.inputBuffer ++ input
@@ -763,12 +771,16 @@ typeTo input (Data data) =
                 -- 追記
                 -- missプロパティをこのライブラリで管理することをやめた。それにそのまま返す方式。
                 -- そのまま返すか、Missの場合は元のを返すか迷う。
-                typeTo input (nextData tmp (Data data))
+                typeTo_ input (nextData tmp (Data data))
 
     else if al == 1 then
         case tmpFixed of
             Nothing ->
-                Data { data | convertBuf = ConvertBuf sumInput tmpFixed nextCandidates, state = Typing }
+                Data
+                    { data
+                        | convertBuf = ConvertBuf sumInput tmpFixed nextCandidates
+                        , state = Typing
+                    }
 
             Just tmp ->
                 -- 1つに確定。
@@ -776,7 +788,11 @@ typeTo input (Data data) =
 
     else
         -- 確定したものはあるが、まだ変化する可能性はある。
-        Data { data | convertBuf = ConvertBuf sumInput tmpFixed nextCandidates, state = Typing }
+        Data
+            { data
+                | convertBuf = ConvertBuf sumInput tmpFixed nextCandidates
+                , state = Typing
+            }
 
 
 type alias PrintRule =
@@ -791,8 +807,8 @@ defaultPriorities =
     [ PrintRule "ja" "じゃ" 3
     , PrintRule "zya" "じゃ" 2
     , PrintRule "jya" "じゃ" 1
-    , PrintRule "xn" "ん" 3
-    , PrintRule "n" "ん" 2
+    , PrintRule "xn" "ん" 2
+    , PrintRule "n" "ん" 3
     ]
 
 
@@ -833,13 +849,44 @@ dropHead head str =
         str
 
 
-makeRomaji_ : Data -> List Rule -> Maybe Data
-makeRomaji_ (Data data) candidates =
+type alias DBG =
+    String
+
+
+nextD : DBG -> DBG
+nextD dbg =
+    "    " ++ dbg
+
+
+printD : DBG -> String -> a -> a
+printD dbg str =
+    Debug.log (dbg ++ str)
+
+
+printDS : (a -> b) -> DBG -> String -> a -> a
+printDS f str dbg a =
+    printD dbg str (f a)
+        |> always a
+
+
+makeRomaji_ : Data -> List Rule -> DBG -> Maybe Data
+makeRomaji_ (Data data) candidates dbg =
+    let
+        dd =
+            printD dbg "data:" (debugData (Data data))
+
+        df =
+            printD dbg "candidates:" candidates
+    in
     case data.state of
         Finish ->
             Just (Data data)
 
         Miss ->
+            let
+                ddd =
+                    printD dbg "miss:" (debugData (Data data))
+            in
             Nothing
 
         _ ->
@@ -851,19 +898,34 @@ makeRomaji_ (Data data) candidates =
                     let
                         input =
                             dropHead data.convertBuf.inputBuffer c.input
+                                |> printD dbg "input:"
 
-                        nd =
+                        (Data nd) =
                             typeTo input (Data data)
 
+                        _ =
+                            printD dbg "c:" c
+
+                        -- rest =
+                        --     String.dropLeft (String.length c.output) data.restWords
+                        --         |> printD dbg "rest:"
                         rest =
-                            String.dropLeft (String.length c.output) data.restWords
+                            (case nd.convertBuf.tmpFixed of
+                                Nothing ->
+                                    nd.restWords
+
+                                Just r ->
+                                    String.dropLeft (String.length r.output) data.restWords
+                            )
+                                |> printD dbg "rest"
 
                         nc =
                             List.filter (\r -> String.startsWith r.output rest) data.rules
+                                |> printD dbg "nc:"
                     in
-                    case makeRomaji_ nd nc of
+                    case makeRomaji_ (Data nd) nc (nextD dbg) of
                         Nothing ->
-                            makeRomaji_ (Data data) cs
+                            makeRomaji_ (Data data) cs (nextD dbg)
 
                         Just rd ->
                             Just rd
@@ -875,8 +937,8 @@ makeRomaji (Data data) =
         candidates =
             List.filter (\r -> String.startsWith r.output data.restWords) data.convertBuf.candidates
     in
-    makeRomaji_ (Data { data | history = "" }) candidates
-        |> Maybe.map (\(Data fd) -> fd.history)
+    makeRomaji_ (Data { data | history = "" }) candidates (nextD "")
+        |> Maybe.map (\fd -> getHistory fd)
 
 
 debugData (Data data) =
@@ -889,16 +951,44 @@ debugData (Data data) =
     }
 
 
+
+-- type alias Point {
+--     x : Int
+--     y : Int
+-- }
+-- hoge x y dbg =
+--     let
+--         dx =
+--             printD dbg "x" x
+--         dy =
+--             printD dbg "y" y
+--     in
+--     if x + y < 20 then
+--         hoge (x + 5) (y + 2) (nextD dbg)
+--     else
+--         ()
+
+
+typeAllKeys2 : String -> Data -> Data
+typeAllKeys2 inputs data =
+    List.foldl (\input d -> typeTo input d) data (String.split "" inputs)
+
+
 hoge =
     let
         myRules =
             romanTable
                 |> setPriorities defaultPriorities
 
+        piyo =
+            .history
+
         data =
-            newData "あいうえお" myRules
-                |> typeTo "a"
-                |> makeRomaji
-                |> Debug.log "romaji:"
+            newData "けんで" myRules
+                |> typeAllKeys2 "kende"
+                |> printDS debugData "" "hogehogehoge"
+
+        -- |> makeRomaji
+        -- |> Debug.log "romaji:"
     in
     "hoge"

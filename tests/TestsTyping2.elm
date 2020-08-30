@@ -77,17 +77,25 @@ testMakeRomaji =
                 [ Typing.PrintRule "n" "ん" 3
                 , Typing.PrintRule "xn" "ん" 2
                 , Typing.PrintRule "nn" "ん" 1
+                , Typing.PrintRule "ja" "じゃ" 3
                 ]
                 Typing.romanTable
 
         testList =
             [ MakeRomajiTestData myRules1 "あいうえお" "" (Just "aiueo")
             , MakeRomajiTestData myRules1 "あか" "aka" (Just "")
-            , MakeRomajiTestData myRules1 "じゃ" "z" (Just "zya")
+            , MakeRomajiTestData myRules1 "じゃ" "z" (Just "ya")
+            , MakeRomajiTestData myRules1 "じゃ" "j" (Just "a")
             , MakeRomajiTestData myRules1 "み" "t" Nothing
             , MakeRomajiTestData myRules2 "んあ" "" (Just "xna")
-            , MakeRomajiTestData myRules2 "んあ" "n" (Just "nna")
+            , MakeRomajiTestData myRules2 "んあ" "n" (Just "na")
             , MakeRomajiTestData myRules2 "んか" "" (Just "nka")
+            , MakeRomajiTestData myRules2 "じゃんけんじゃん" "" (Just "jankenjaxn")
+            , MakeRomajiTestData myRules2 "じゃ" "ji" (Just "xya")
+            , MakeRomajiTestData myRules2 "んかんあ" "" (Just "nkaxna")
+            , MakeRomajiTestData myRules2 "んけん" "" (Just "nkexn")
+            , MakeRomajiTestData myRules2 "んけん" "n" (Just "kexn")
+            , MakeRomajiTestData myRules2 "ん" "n" (Just "n")
             ]
     in
     describe "Test makeRomaji"
