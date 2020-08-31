@@ -87,6 +87,10 @@ testMakeRomaji =
             , MakeRomajiTestData myRules1 "じゃ" "z" (Just "ya")
             , MakeRomajiTestData myRules1 "じゃ" "j" (Just "a")
             , MakeRomajiTestData myRules1 "み" "t" Nothing
+            , MakeRomajiTestData myRules1 "しゃかいじん" "" (Just "syakaijinn")
+            , MakeRomajiTestData myRules1 "ぷろぐらみんぐげんご" "pur" (Just "oguramingugengo")
+            , MakeRomajiTestData myRules1 "ちょこれーと" "" (Just "tyokore-to")
+            , MakeRomajiTestData myRules1 "ちょこれーと" "c" (Just "hokore-to")
             , MakeRomajiTestData myRules2 "んあ" "" (Just "xna")
             , MakeRomajiTestData myRules2 "んあ" "n" (Just "na")
             , MakeRomajiTestData myRules2 "んか" "" (Just "nka")

@@ -804,11 +804,53 @@ type alias PrintRule =
 
 defaultPriorities : List PrintRule
 defaultPriorities =
-    [ PrintRule "ja" "じゃ" 3
-    , PrintRule "zya" "じゃ" 2
-    , PrintRule "jya" "じゃ" 1
-    , PrintRule "xn" "ん" 2
-    , PrintRule "n" "ん" 3
+    [ PrintRule "ji" "じ" 1
+    , PrintRule "fu" "ふ" 1
+    , PrintRule "ti" "ち" 1
+    , PrintRule "si" "し" 2
+    , PrintRule "shi" "し" 1
+    , PrintRule "tu" "つ" 1
+    , PrintRule "n" "ん" 2
+    , PrintRule "nn" "ん" 1
+    , PrintRule "sya" "しゃ" 4
+    , PrintRule "syi" "しぃ" 4
+    , PrintRule "syu" "しゅ" 4
+    , PrintRule "sye" "しぇ" 4
+    , PrintRule "syo" "しょ" 4
+    , PrintRule "sha" "しゃ" 3
+    , PrintRule "shu" "しゅ" 3
+    , PrintRule "she" "しぇ" 3
+    , PrintRule "sho" "しょ" 3
+    , PrintRule "tya" "ちゃ" 4
+    , PrintRule "tyi" "ちぃ" 4
+    , PrintRule "tyu" "ちゅ" 4
+    , PrintRule "tye" "ちぇ" 4
+    , PrintRule "tyo" "ちょ" 4
+    , PrintRule "cha" "ちゃ" 3
+    , PrintRule "chu" "ちゅ" 3
+    , PrintRule "che" "ちぇ" 3
+    , PrintRule "cho" "ちょ" 3
+    , PrintRule "cya" "ちゃ" 2
+    , PrintRule "cyi" "ちぃ" 2
+    , PrintRule "cyu" "ちゅ" 2
+    , PrintRule "cye" "ちぇ" 2
+    , PrintRule "cyo" "ちょ" 2
+    , PrintRule "ja" "じゃ" 4
+    , PrintRule "jyi" "じぃ" 4
+    , PrintRule "ju" "じゅ" 4
+    , PrintRule "je" "じぇ" 4
+    , PrintRule "jo" "じょ" 4
+    , PrintRule "zya" "じゃ" 3
+    , PrintRule "zyi" "じぃ" 3
+    , PrintRule "zyu" "じゅ" 3
+    , PrintRule "zye" "じぇ" 3
+    , PrintRule "zyo" "じょ" 3
+    , PrintRule "jya" "じゃ" 2
+    , PrintRule "jyi" "じぃ" 2
+    , PrintRule "jyu" "じゅ" 2
+    , PrintRule "jye" "じぇ" 2
+    , PrintRule "jyo" "じょ" 2
+    , PrintRule "ka" "か" 1
     ]
 
 
@@ -984,11 +1026,10 @@ hoge =
             .history
 
         data =
-            newData "けんで" myRules
-                |> typeAllKeys2 "kende"
-                |> printDS debugData "" "hogehogehoge"
-
-        -- |> makeRomaji
-        -- |> Debug.log "romaji:"
+            newData "しゃかいじん" myRules
+                -- |> typeAllKeys2 "kende"
+                -- |> printDS debugData "" "hogehogehoge"
+                |> makeRomaji
+                |> Debug.log "romaji:"
     in
     "hoge"
