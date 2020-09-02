@@ -7,18 +7,13 @@ module Typing2 exposing
     , getFixed
     , getHistory
     , getRest
-    ,  getState
-       -- , getWantingKeys__test
-
-    , hoge
+    , getState
     , makeRomaji
     , newData
     , romanTable
     , setPriorities
     , typeTo
     )
-
-import Html exposing (a)
 
 
 type alias Rule =
@@ -851,6 +846,12 @@ defaultPriorities =
     , PrintRule "jye" "じぇ" 2
     , PrintRule "jyo" "じょ" 2
     , PrintRule "ka" "か" 1
+
+    --苦肉の策。あとでコスパによる優先度設定はするかもしれない。
+    , PrintRule "ltu" "っ" -1
+    , PrintRule "xtu" "っ" -2
+    , PrintRule "ltsu" "っ" -3
+    , PrintRule "xtsu" "っ" -4
     ]
 
 
@@ -891,44 +892,13 @@ dropHead head str =
         str
 
 
-type alias DBG =
-    String
-
-
-nextD : DBG -> DBG
-nextD dbg =
-    "    " ++ dbg
-
-
-printD : DBG -> String -> a -> a
-printD dbg str =
-    Debug.log (dbg ++ str)
-
-
-printDS : (a -> b) -> DBG -> String -> a -> a
-printDS f str dbg a =
-    printD dbg str (f a)
-        |> always a
-
-
-makeRomaji_ : Data -> List Rule -> DBG -> Maybe Data
-makeRomaji_ (Data data) candidates dbg =
-    let
-        dd =
-            printD dbg "data:" (debugData (Data data))
-
-        df =
-            printD dbg "candidates:" candidates
-    in
+makeRomaji_ : Data -> List Rule -> Maybe Data
+makeRomaji_ (Data data) candidates =
     case data.state of
         Finish ->
             Just (Data data)
 
         Miss ->
-            let
-                ddd =
-                    printD dbg "miss:" (debugData (Data data))
-            in
             Nothing
 
         _ ->
@@ -940,34 +910,24 @@ makeRomaji_ (Data data) candidates dbg =
                     let
                         input =
                             dropHead data.convertBuf.inputBuffer c.input
-                                |> printD dbg "input:"
 
                         (Data nd) =
                             typeTo input (Data data)
 
-                        _ =
-                            printD dbg "c:" c
-
-                        -- rest =
-                        --     String.dropLeft (String.length c.output) data.restWords
-                        --         |> printD dbg "rest:"
                         rest =
-                            (case nd.convertBuf.tmpFixed of
+                            case nd.convertBuf.tmpFixed of
                                 Nothing ->
                                     nd.restWords
 
                                 Just r ->
                                     String.dropLeft (String.length r.output) data.restWords
-                            )
-                                |> printD dbg "rest"
 
                         nc =
                             List.filter (\r -> String.startsWith r.output rest) data.rules
-                                |> printD dbg "nc:"
                     in
-                    case makeRomaji_ (Data nd) nc (nextD dbg) of
+                    case makeRomaji_ (Data nd) nc of
                         Nothing ->
-                            makeRomaji_ (Data data) cs (nextD dbg)
+                            makeRomaji_ (Data data) cs
 
                         Just rd ->
                             Just rd
@@ -979,57 +939,34 @@ makeRomaji (Data data) =
         candidates =
             List.filter (\r -> String.startsWith r.output data.restWords) data.convertBuf.candidates
     in
-    makeRomaji_ (Data { data | history = "" }) candidates (nextD "")
+    makeRomaji_ (Data { data | history = "" }) candidates
         |> Maybe.map (\fd -> getHistory fd)
 
 
-debugData (Data data) =
-    { fixedWords = data.fixedWords
-    , restWords = data.restWords
-    , state = data.state
-    , history = data.history
-    , inputBuffer = data.convertBuf.inputBuffer
-    , tmpFixed = data.convertBuf.tmpFixed
-    }
 
-
-
--- type alias Point {
---     x : Int
---     y : Int
--- }
--- hoge x y dbg =
+-- debugData (Data data) =
+--     { fixedWords = data.fixedWords
+--     , restWords = data.restWords
+--     , state = data.state
+--     , history = data.history
+--     , inputBuffer = data.convertBuf.inputBuffer
+--     , tmpFixed = data.convertBuf.tmpFixed
+--     }
+-- typeAllKeys2 : String -> Data -> Data
+-- typeAllKeys2 inputs data =
+--     List.foldl (\input d -> typeTo input d) data (String.split "" inputs)
+-- hoge =
 --     let
---         dx =
---             printD dbg "x" x
---         dy =
---             printD dbg "y" y
+--         myRules =
+--             romanTable
+--                 |> setPriorities defaultPriorities
+--         piyo =
+--             .history
+--         data =
+--             newData "しゃかいじん" myRules
+--                 -- |> typeAllKeys2 "kende"
+--                 -- |> printDS debugData "" "hogehogehoge"
+--                 |> makeRomaji
+--                 |> Debug.log "romaji:"
 --     in
---     if x + y < 20 then
---         hoge (x + 5) (y + 2) (nextD dbg)
---     else
---         ()
-
-
-typeAllKeys2 : String -> Data -> Data
-typeAllKeys2 inputs data =
-    List.foldl (\input d -> typeTo input d) data (String.split "" inputs)
-
-
-hoge =
-    let
-        myRules =
-            romanTable
-                |> setPriorities defaultPriorities
-
-        piyo =
-            .history
-
-        data =
-            newData "しゃかいじん" myRules
-                -- |> typeAllKeys2 "kende"
-                -- |> printDS debugData "" "hogehogehoge"
-                |> makeRomaji
-                |> Debug.log "romaji:"
-    in
-    "hoge"
+--     "hoge"

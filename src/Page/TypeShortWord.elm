@@ -247,9 +247,12 @@ initCustomTypingWords words =
         isw =
             List.indexedMap Tuple.pair words
 
+        printRules =
+            Typing.setPriorities Typing.defaultPriorities Typing.romanTable
+
         fun ( i, d ) =
             { index = i
-            , typingData = Typing.newData d.wordForInput
+            , typingData = Typing.newData d.wordForInput printRules
             , wordForView = d.wordForView
             , inputHistory = ""
             , miss = 0
@@ -917,6 +920,14 @@ viewText words word =
                 ]
             , div [ class "typing-form__input" ]
                 [ text (getInputHistory word) ]
+            , div [ class "typing-form__input" ]
+                [ text (Typing.getHistory word.typingData) ]
+            , div [ class "typing-form__input" ]
+                [ text
+                    (Typing.makeRomaji word.typingData
+                        |> Maybe.withDefault "Nothing"
+                    )
+                ]
             , div [ class "typing-form__state" ]
                 [ text ("ミス数:" ++ String.fromInt words.miss)
                 , List.length words.finish
