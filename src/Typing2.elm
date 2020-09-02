@@ -848,6 +848,7 @@ defaultPriorities =
     , PrintRule "ka" "か" 1
 
     --苦肉の策。あとでコスパによる優先度設定はするかもしれない。
+    --文字列による並び替えで優先度設定も。いつか。
     , PrintRule "ltu" "っ" -1
     , PrintRule "xtu" "っ" -2
     , PrintRule "ltsu" "っ" -3

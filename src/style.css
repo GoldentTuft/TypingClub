@@ -14,6 +14,7 @@
 * {
     margin: 0px;
     padding: 0px;
+    box-sizing: border-box;
 }
 
 body {
@@ -43,24 +44,32 @@ button {
   padding: 0.2em;
 }
 
+/* div, span {
+  outline: 1px solid #9b4dca;
+  outline-offset: 0.5px;
+} */
+
 .typing-form {
+  width: 70%;
   background-color: #white;
   text-align: center;
-  margin: 20px;
+  margin-left: auto;
+  margin-right: auto;
   border-style: inset;
   border-width: thin;
 }
 
 .typing-form__missed {
   background-color: #D9B7B0;
-  text-align: center;
-  margin: 20px;
+  /* text-align: center;
+  margin: 20px; */
 }
 
 .typing-form__body {
+  width: 100%;
   display: inline-block;
   text-align: left;
-  margin: 4px;
+  padding: 1rem;
 }
 
 .typing-form__words {
@@ -77,11 +86,24 @@ button {
 }
 
 .typing-form__input {
+  width: 100%;
   color: black;
   font-size: 1.5em;
   font-weight: 400;
-  height: 1.5em;
-  word-break: break-all;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.typing-form__input__history {
+  color: #D3D3D3;
+}
+
+.typing-form__input__focused {
+  /* border-bottom: 4px solid black;  隠れてしまう。*/
+  background: linear-gradient(transparent 90%, black 10%);
+}
+
+.typing-form__input__rest {
 }
 
 .typing-form__state {

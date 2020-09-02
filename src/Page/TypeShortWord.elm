@@ -85,7 +85,6 @@ type alias CustomTypingWord =
     { index : Int
     , typingData : Typing.Data
     , wordForView : String
-    , inputHistory : String
     , miss : Int
     , rhythmTimer : CountDown.Timer
     , startTime : Time.Posix
@@ -201,14 +200,8 @@ init env =
             env.url
 
         id =
-            case
-                Url.Parser.parse routeParser { url | path = "/" }
-            of
-                Just (Top d1) ->
-                    d1
-
-                Nothing ->
-                    Nothing
+            Url.Parser.parse routeParser { url | path = "/" }
+                |> Maybe.map (\(Top d1) -> d1)
 
         readyData =
             newTestReadyData
@@ -254,7 +247,6 @@ initCustomTypingWords words =
             { index = i
             , typingData = Typing.newData d.wordForInput printRules
             , wordForView = d.wordForView
-            , inputHistory = ""
             , miss = 0
             , rhythmTimer =
                 if i == 0 then
@@ -324,7 +316,6 @@ updateByCorrect key newTypingData word words =
         newWord =
             { word
                 | typingData = newTypingData
-                , inputHistory = word.inputHistory ++ key
             }
 
         newWords =
@@ -810,7 +801,7 @@ getSumOfInput : List CustomTypingWord -> Int
 getSumOfInput words =
     let
         f w sum =
-            sum + String.length w.inputHistory
+            sum + String.length (Typing.getHistory w.typingData)
     in
     List.foldl f 0 words
 
@@ -882,22 +873,63 @@ getRest wordForView td =
 
 getInputHistory : CustomTypingWord -> String
 getInputHistory word =
-    if String.length word.inputHistory > 15 then
-        String.right 15 word.inputHistory
+    let
+        history =
+            Typing.getHistory word.typingData
+    in
+    if String.length history > 15 then
+        String.right 15 history
 
     else
-        word.inputHistory
+        history
+
+
+inputHistoryView : CustomTypingWord -> Html Msg
+inputHistoryView word =
+    let
+        history1 =
+            Typing.getHistory word.typingData
+
+        history2 =
+            if String.length history1 > 15 then
+                String.right 15 history1
+
+            else
+                history1
+    in
+    span [ class "typing-form__input__history" ] [ text history2 ]
+
+
+restRomajiView : Bool -> Typing.Data -> Html Msg
+restRomajiView missed data =
+    let
+        romaji =
+            Typing.makeRomaji data
+                |> Maybe.withDefault ""
+
+        focused =
+            String.left 1 romaji
+
+        rest =
+            String.dropLeft 1 romaji
+    in
+    span []
+        [ span [ class "typing-form__input__focused" ] [ text focused ]
+        , span [ class "typing-form__input__rest" ] [ text rest ]
+        ]
 
 
 viewText : CustomTypingWords -> CustomTypingWord -> Html Msg
 viewText words word =
     div
         [ class
-            (if words.missed == True then
-                "typing-form__missed"
+            ("typing-form"
+                ++ (if words.missed == True then
+                        " typing-form__missed"
 
-             else
-                "typing-form"
+                    else
+                        ""
+                   )
             )
         ]
         [ div [ class "typing-form__body" ]
@@ -918,15 +950,20 @@ viewText words word =
                 , span [ class "typing-form__rest" ]
                     [ text (getRest word.wordForView word.typingData) ]
                 ]
-            , div [ class "typing-form__input" ]
-                [ text (getInputHistory word) ]
-            , div [ class "typing-form__input" ]
-                [ text (Typing.getHistory word.typingData) ]
-            , div [ class "typing-form__input" ]
-                [ text
-                    (Typing.makeRomaji word.typingData
-                        |> Maybe.withDefault "Nothing"
+            , div
+                [ class "typing-form__input"
+                , style
+                    "visibility"
+                    (case CountDown.getState word.rhythmTimer of
+                        CountDown.Zero ->
+                            "visible"
+
+                        _ ->
+                            "hidden"
                     )
+                ]
+                [ inputHistoryView word
+                , restRomajiView words.missed word.typingData
                 ]
             , div [ class "typing-form__state" ]
                 [ text ("ミス数:" ++ String.fromInt words.miss)

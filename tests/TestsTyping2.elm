@@ -95,6 +95,8 @@ testMakeRomaji =
             , MakeRomajiTestData myRules1 "てんになる" "" (Just "tennninaru")
             , MakeRomajiTestData myRules1 "いっそ" "" (Just "isso")
             , MakeRomajiTestData myRules1 "あっそ" "a" (Just "sso")
+            , MakeRomajiTestData myRules1 "にっし" "" (Just "nissi")
+            , MakeRomajiTestData myRules1 "っく" "" (Just "kku")
             , MakeRomajiTestData myRules2 "んあ" "" (Just "xna")
             , MakeRomajiTestData myRules2 "んあ" "n" (Just "na")
             , MakeRomajiTestData myRules2 "んか" "" (Just "nka")

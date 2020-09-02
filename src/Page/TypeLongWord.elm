@@ -585,11 +585,13 @@ viewText : Model -> Typing.Data -> Html msg
 viewText model typingData =
     div
         [ class
-            (if model.missed then
-                "typing-form__missed"
+            ("typing-form"
+                ++ (if model.missed then
+                        " typing-form__missed"
 
-             else
-                "typing-form"
+                    else
+                        ""
+                   )
             )
         ]
         [ div [ class "typing-form__body" ]
