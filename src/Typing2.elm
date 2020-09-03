@@ -8,6 +8,7 @@ module Typing2 exposing
     , getHistory
     , getRest
     , getState
+    , hoge
     , makeRomaji
     , newData
     , romanTable
@@ -884,6 +885,40 @@ setPriorities printRules rules =
         |> List.sortWith sf
 
 
+{-| コスパによる優先度を設定する
+"a" "あ" => 1/1=1
+"ltsu" "っ" => 1/4=0.25
+-}
+setEfficiency : Rules -> List PrintRule
+setEfficiency rules =
+    let
+        calcEfficiencyA r =
+            toFloat (String.length r.output) / toFloat (String.length r.input)
+
+        efficiencies =
+            List.map (\rule -> calcEfficiencyA rule) rules
+
+        max =
+            List.maximum efficiencies
+                |> Maybe.withDefault 1
+
+        min =
+            List.minimum efficiencies
+                |> Maybe.withDefault 0
+
+        -- 正規化して9倍しているのは特に意味はない。
+        -- なんとなく節約。0.25*100とかでもよさそう。
+        calcEfficiencyB x =
+            ((x - min) / (max - min)) * 9 |> round
+    in
+    List.map2
+        (\rule efficiency ->
+            { rule | priority = calcEfficiencyB efficiency }
+        )
+        rules
+        efficiencies
+
+
 dropHead : String -> String -> String
 dropHead head str =
     if String.startsWith head str then
@@ -971,3 +1006,12 @@ makeRomaji (Data data) =
 --                 |> Debug.log "romaji:"
 --     in
 --     "hoge"
+
+
+hoge =
+    let
+        _ =
+            setEfficiency romanTable
+                |> Debug.log "efficiency"
+    in
+    "hoge"
