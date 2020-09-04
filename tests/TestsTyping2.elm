@@ -70,16 +70,20 @@ testMakeRomaji : Test
 testMakeRomaji =
     let
         myRules1 =
-            Typing.setPriorities Typing.defaultPriorities Typing.romanTable
+            Typing.romanTable
+                |> Typing.setPriorities Typing.defaultPriorities
+                |> Typing.insertLowPriorities (Typing.setEfficiency Typing.romanTable)
 
         myRules2 =
-            Typing.setPriorities
-                [ Typing.PrintRule "n" "ん" 3
-                , Typing.PrintRule "xn" "ん" 2
-                , Typing.PrintRule "nn" "ん" 1
-                , Typing.PrintRule "ja" "じゃ" 3
-                ]
-                Typing.romanTable
+            Typing.romanTable
+                |> Typing.setPriorities
+                    [ Typing.PrintRule "n" "ん" 3
+                    , Typing.PrintRule "xn" "ん" 2
+                    , Typing.PrintRule "nn" "ん" 1
+                    , Typing.PrintRule "ja" "じゃ" 3
+                    ]
+                |> Typing.insertLowPriorities (Typing.setEfficiency Typing.romanTable)
+                |> Typing.debugRules
 
         testList =
             [ MakeRomajiTestData myRules1 "あいうえお" "" (Just "aiueo")

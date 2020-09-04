@@ -3,15 +3,18 @@ module Typing2 exposing
     , PrintRule
     , Rules
     , State(..)
+    , debugRules
     , defaultPriorities
     , getFixed
     , getHistory
     , getRest
     , getState
     , hoge
+    , insertLowPriorities
     , makeRomaji
     , newData
     , romanTable
+    , setEfficiency
     , setPriorities
     , typeTo
     )
@@ -660,13 +663,18 @@ type State
 
 newData : String -> Rules -> Data
 newData words rules =
+    let
+        sf : Rule -> Rule -> Order
+        sf a b =
+            compare b.priority a.priority
+    in
     Data
         { fixedWords = ""
         , restWords = words
-        , convertBuf = ConvertBuf "" Nothing rules
+        , convertBuf = ConvertBuf "" Nothing (List.sortWith sf rules)
         , state = Waiting
         , history = ""
-        , rules = rules
+        , rules = List.sortWith sf rules
         }
 
 
@@ -850,44 +858,43 @@ defaultPriorities =
 
     --苦肉の策。あとでコスパによる優先度設定はするかもしれない。
     --文字列による並び替えで優先度設定も。いつか。
-    , PrintRule "ltu" "っ" -1
-    , PrintRule "xtu" "っ" -2
-    , PrintRule "ltsu" "っ" -3
-    , PrintRule "xtsu" "っ" -4
+    -- , PrintRule "ltu" "っ" -1
+    -- , PrintRule "xtu" "っ" -2
+    -- , PrintRule "ltsu" "っ" -3
+    -- , PrintRule "xtsu" "っ" -4
     ]
+
+
+getPriority : Rule -> List PrintRule -> Int
+getPriority rule prs =
+    case prs of
+        [] ->
+            rule.priority
+
+        x :: xs ->
+            if rule.input == x.input && rule.output == x.output then
+                x.priority
+
+            else
+                getPriority rule xs
 
 
 setPriorities : List PrintRule -> Rules -> Rules
 setPriorities printRules rules =
-    let
-        getPriority : Rule -> List PrintRule -> Int
-        getPriority rule prs =
-            case prs of
-                [] ->
-                    rule.priority
-
-                x :: xs ->
-                    if rule.input == x.input && rule.output == x.output then
-                        x.priority
-
-                    else
-                        getPriority rule xs
-
-        sf : Rule -> Rule -> Order
-        sf a b =
-            compare b.priority a.priority
-    in
     List.map
         (\rule ->
             { rule | priority = getPriority rule printRules }
         )
         rules
-        |> List.sortWith sf
 
 
 {-| コスパによる優先度を設定する
-"a" "あ" => 1/1=1
-"ltsu" "っ" => 1/4=0.25
+"xtu" "っ" => 1/3=0.33
+"xtsu" "っ" => 1/4=0.25
+他ので愚直に設定すれば使わなくてもいいかも。
+必要キー数を得るのに使うかも。
+それは結構怪しい。
+「うぃるす」をuxirusuと出してしまうので、2桁目の優先度を設定した。
 -}
 setEfficiency : Rules -> List PrintRule
 setEfficiency rules =
@@ -906,17 +913,58 @@ setEfficiency rules =
             List.minimum efficiencies
                 |> Maybe.withDefault 0
 
-        -- 正規化して9倍しているのは特に意味はない。
-        -- なんとなく節約。0.25*100とかでもよさそう。
+        -- なんとなく00～99の間にしたい
         calcEfficiencyB x =
-            ((x - min) / (max - min)) * 9 |> round
+            ((x - min) / (max - min)) * 90 |> round
+
+        outputLength r =
+            clamp 1 9 (String.length r.output)
     in
     List.map2
         (\rule efficiency ->
-            { rule | priority = calcEfficiencyB efficiency }
+            { rule | priority = calcEfficiencyB efficiency + outputLength rule }
         )
         rules
         efficiencies
+
+
+getPower : Int -> Int
+getPower max =
+    if max < 10 then
+        10
+
+    else if max < 100 then
+        100
+
+    else if max < 1000 then
+        1000
+
+    else if max < 10000 then
+        10000
+
+    else
+        1
+
+
+insertLowPriorities : List PrintRule -> Rules -> Rules
+insertLowPriorities priorities rules =
+    let
+        ps =
+            List.map (\p -> p.priority) priorities
+
+        max =
+            List.maximum ps
+                |> Maybe.withDefault 1
+
+        power =
+            getPower max
+                |> Debug.log "power"
+    in
+    List.map
+        (\rule ->
+            { rule | priority = rule.priority * power + getPriority rule priorities }
+        )
+        rules
 
 
 dropHead : String -> String -> String
@@ -928,8 +976,12 @@ dropHead head str =
         str
 
 
-makeRomaji_ : Data -> List Rule -> Maybe Data
-makeRomaji_ (Data data) candidates =
+makeRomaji_ : Data -> List Rule -> DBG -> Maybe Data
+makeRomaji_ (Data data) candidates dbg =
+    let
+        _ =
+            printD dbg "candidates" candidates
+    in
     case data.state of
         Finish ->
             Just (Data data)
@@ -961,9 +1013,9 @@ makeRomaji_ (Data data) candidates =
                         nc =
                             List.filter (\r -> String.startsWith r.output rest) data.rules
                     in
-                    case makeRomaji_ (Data nd) nc of
+                    case makeRomaji_ (Data nd) nc (nextD dbg) of
                         Nothing ->
-                            makeRomaji_ (Data data) cs
+                            makeRomaji_ (Data data) cs (nextD dbg)
 
                         Just rd ->
                             Just rd
@@ -972,46 +1024,78 @@ makeRomaji_ (Data data) candidates =
 makeRomaji : Data -> Maybe String
 makeRomaji (Data data) =
     let
+        _ =
+            data.convertBuf.candidates
+                |> Debug.log "c"
+
         candidates =
             List.filter (\r -> String.startsWith r.output data.restWords) data.convertBuf.candidates
     in
-    makeRomaji_ (Data { data | history = "" }) candidates
+    makeRomaji_ (Data { data | history = "" }) candidates ""
         |> Maybe.map (\fd -> getHistory fd)
 
 
+debugData (Data data) =
+    { fixedWords = data.fixedWords
+    , restWords = data.restWords
+    , state = data.state
+    , history = data.history
+    , inputBuffer = data.convertBuf.inputBuffer
+    , tmpFixed = data.convertBuf.tmpFixed
+    }
 
--- debugData (Data data) =
---     { fixedWords = data.fixedWords
---     , restWords = data.restWords
---     , state = data.state
---     , history = data.history
---     , inputBuffer = data.convertBuf.inputBuffer
---     , tmpFixed = data.convertBuf.tmpFixed
---     }
--- typeAllKeys2 : String -> Data -> Data
--- typeAllKeys2 inputs data =
---     List.foldl (\input d -> typeTo input d) data (String.split "" inputs)
--- hoge =
---     let
---         myRules =
---             romanTable
---                 |> setPriorities defaultPriorities
---         piyo =
---             .history
---         data =
---             newData "しゃかいじん" myRules
---                 -- |> typeAllKeys2 "kende"
---                 -- |> printDS debugData "" "hogehogehoge"
---                 |> makeRomaji
---                 |> Debug.log "romaji:"
---     in
---     "hoge"
+
+typeAllKeys2 : String -> Data -> Data
+typeAllKeys2 inputs data =
+    List.foldl (\input d -> typeTo input d) data (String.split "" inputs)
+
+
+debugRules : Rules -> Rules
+debugRules rules =
+    let
+        sf : Rule -> Rule -> Order
+        sf a b =
+            compare b.priority a.priority
+    in
+    rules
+        |> List.sortWith sf
+        |> Debug.log "rules:"
+
+
+type alias DBG =
+    String
+
+
+nextD : DBG -> DBG
+nextD dbg =
+    "    " ++ dbg
+
+
+printD : DBG -> String -> a -> a
+printD dbg str =
+    Debug.log (dbg ++ str)
+
+
+printDS : (a -> b) -> DBG -> String -> a -> a
+printDS f str dbg a =
+    printD dbg str (f a)
+        |> always a
 
 
 hoge =
     let
+        sf : Rule -> Rule -> Order
+        sf a b =
+            compare b.priority a.priority
+
         _ =
-            setEfficiency romanTable
-                |> Debug.log "efficiency"
+            setPriorities defaultPriorities romanTable
+                |> insertLowPriorities (setEfficiency romanTable)
+                |> debugRules
+
+        -- |> newData "ちょ"
+        -- |> typeTo "c"
+        -- |> makeRomaji
+        -- |> Debug.log "romaji"
     in
     "hoge"
