@@ -3,18 +3,17 @@ module Typing2 exposing
     , PrintRule
     , Rules
     , State(..)
-    , debugRules
     , defaultPriorities
     , getFixed
     , getHistory
     , getRest
     , getState
-    , hoge
     , insertLowPriorities
     , makeRomaji
     , newData
     , romanTable
     , setEfficiency
+    , setFavoriteKeys
     , setPriorities
     , typeTo
     )
@@ -928,6 +927,26 @@ setEfficiency rules =
         efficiencies
 
 
+setFavoriteKeys : List String -> Rules -> List PrintRule
+setFavoriteKeys keys rules =
+    let
+        containAny ks input =
+            List.any (\k -> String.contains k input) ks
+    in
+    List.map
+        (\rule ->
+            { rule
+                | priority =
+                    if containAny keys rule.input then
+                        1
+
+                    else
+                        0
+            }
+        )
+        rules
+
+
 getPower : Int -> Int
 getPower max =
     if max < 10 then
@@ -958,7 +977,6 @@ insertLowPriorities priorities rules =
 
         power =
             getPower max
-                |> Debug.log "power"
     in
     List.map
         (\rule ->
@@ -976,12 +994,8 @@ dropHead head str =
         str
 
 
-makeRomaji_ : Data -> List Rule -> DBG -> Maybe Data
-makeRomaji_ (Data data) candidates dbg =
-    let
-        _ =
-            printD dbg "candidates" candidates
-    in
+makeRomaji_ : Data -> List Rule -> Maybe Data
+makeRomaji_ (Data data) candidates =
     case data.state of
         Finish ->
             Just (Data data)
@@ -1013,9 +1027,9 @@ makeRomaji_ (Data data) candidates dbg =
                         nc =
                             List.filter (\r -> String.startsWith r.output rest) data.rules
                     in
-                    case makeRomaji_ (Data nd) nc (nextD dbg) of
+                    case makeRomaji_ (Data nd) nc of
                         Nothing ->
-                            makeRomaji_ (Data data) cs (nextD dbg)
+                            makeRomaji_ (Data data) cs
 
                         Just rd ->
                             Just rd
@@ -1024,78 +1038,51 @@ makeRomaji_ (Data data) candidates dbg =
 makeRomaji : Data -> Maybe String
 makeRomaji (Data data) =
     let
-        _ =
-            data.convertBuf.candidates
-                |> Debug.log "c"
-
         candidates =
             List.filter (\r -> String.startsWith r.output data.restWords) data.convertBuf.candidates
     in
-    makeRomaji_ (Data { data | history = "" }) candidates ""
+    makeRomaji_ (Data { data | history = "" }) candidates
         |> Maybe.map (\fd -> getHistory fd)
 
 
-debugData (Data data) =
-    { fixedWords = data.fixedWords
-    , restWords = data.restWords
-    , state = data.state
-    , history = data.history
-    , inputBuffer = data.convertBuf.inputBuffer
-    , tmpFixed = data.convertBuf.tmpFixed
-    }
 
-
-typeAllKeys2 : String -> Data -> Data
-typeAllKeys2 inputs data =
-    List.foldl (\input d -> typeTo input d) data (String.split "" inputs)
-
-
-debugRules : Rules -> Rules
-debugRules rules =
-    let
-        sf : Rule -> Rule -> Order
-        sf a b =
-            compare b.priority a.priority
-    in
-    rules
-        |> List.sortWith sf
-        |> Debug.log "rules:"
-
-
-type alias DBG =
-    String
-
-
-nextD : DBG -> DBG
-nextD dbg =
-    "    " ++ dbg
-
-
-printD : DBG -> String -> a -> a
-printD dbg str =
-    Debug.log (dbg ++ str)
-
-
-printDS : (a -> b) -> DBG -> String -> a -> a
-printDS f str dbg a =
-    printD dbg str (f a)
-        |> always a
-
-
-hoge =
-    let
-        sf : Rule -> Rule -> Order
-        sf a b =
-            compare b.priority a.priority
-
-        _ =
-            setPriorities defaultPriorities romanTable
-                |> insertLowPriorities (setEfficiency romanTable)
-                |> debugRules
-
-        -- |> newData "ちょ"
-        -- |> typeTo "c"
-        -- |> makeRomaji
-        -- |> Debug.log "romaji"
-    in
-    "hoge"
+-- debugData (Data data) =
+--     { fixedWords = data.fixedWords
+--     , restWords = data.restWords
+--     , state = data.state
+--     , history = data.history
+--     , inputBuffer = data.convertBuf.inputBuffer
+--     , tmpFixed = data.convertBuf.tmpFixed
+--     }
+-- typeAllKeys2 : String -> Data -> Data
+-- typeAllKeys2 inputs data =
+--     List.foldl (\input d -> typeTo input d) data (String.split "" inputs)
+-- debugRules : Rules -> Rules
+-- debugRules rules =
+--     let
+--         sf : Rule -> Rule -> Order
+--         sf a b =
+--             compare b.priority a.priority
+--     in
+--     rules
+--         |> List.sortWith sf
+--         |> Debug.log "rules:"
+-- hoge =
+--     let
+--         sf : Rule -> Rule -> Order
+--         sf a b =
+--             compare b.priority a.priority
+--         -- _ =
+--         -- setPriorities defaultPriorities romanTable
+--         --     |> insertLowPriorities (setEfficiency romanTable)
+--         --     |> debugRules
+--         _ =
+--             romanTable
+--                 |> insertLowPriorities (setFavoriteKeys [ "s", "j" ] romanTable)
+--                 |> debugRules
+--         -- |> newData "ちょ"
+--         -- |> typeTo "c"
+--         -- |> makeRomaji
+--         -- |> Debug.log "romaji"
+--     in
+--     "hoge"

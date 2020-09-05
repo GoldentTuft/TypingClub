@@ -241,7 +241,17 @@ initCustomTypingWords words =
             List.indexedMap Tuple.pair words
 
         printRules =
-            Typing.setPriorities Typing.defaultPriorities Typing.romanTable
+            Typing.romanTable
+                |> Typing.setPriorities
+                    [ Typing.PrintRule "n" "ん" 3
+                    , Typing.PrintRule "xn" "ん" 2
+                    , Typing.PrintRule "nn" "ん" 1
+                    ]
+                |> Typing.insertLowPriorities (Typing.setEfficiency Typing.romanTable)
+                |> Typing.insertLowPriorities
+                    (Typing.setFavoriteKeys [ "s", "j", "k", "sy" ]
+                        Typing.romanTable
+                    )
 
         fun ( i, d ) =
             { index = i

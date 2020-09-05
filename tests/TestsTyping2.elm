@@ -71,8 +71,12 @@ testMakeRomaji =
     let
         myRules1 =
             Typing.romanTable
-                |> Typing.setPriorities Typing.defaultPriorities
+                -- |> Typing.setPriorities Typing.defaultPriorities
                 |> Typing.insertLowPriorities (Typing.setEfficiency Typing.romanTable)
+                |> Typing.insertLowPriorities
+                    (Typing.setFavoriteKeys [ "s", "j", "k", "sy" ]
+                        Typing.romanTable
+                    )
 
         myRules2 =
             Typing.romanTable
@@ -83,7 +87,6 @@ testMakeRomaji =
                     , Typing.PrintRule "ja" "じゃ" 3
                     ]
                 |> Typing.insertLowPriorities (Typing.setEfficiency Typing.romanTable)
-                |> Typing.debugRules
 
         testList =
             [ MakeRomajiTestData myRules1 "あいうえお" "" (Just "aiueo")
@@ -102,6 +105,7 @@ testMakeRomaji =
             , MakeRomajiTestData myRules1 "にっし" "" (Just "nissi")
             , MakeRomajiTestData myRules1 "っく" "" (Just "kku")
             , MakeRomajiTestData myRules1 "うぃるす" "" (Just "wirusu")
+            , MakeRomajiTestData myRules1 "ろんよりしょうこ" "" (Just "ronnyorisyouko")
             , MakeRomajiTestData myRules2 "んあ" "" (Just "xna")
             , MakeRomajiTestData myRules2 "んあ" "n" (Just "na")
             , MakeRomajiTestData myRules2 "んか" "" (Just "nka")
