@@ -7,14 +7,15 @@ module Typing2 exposing
     , getFixed
     , getHistory
     , getRest
+    , getSamePriority
     , getState
-    , hoge
     , insertLowPriorities
     , makeRomaji
     , newData
     , romanTable
     , setEfficiency
     , setFavoriteKeys
+    , setFavoriteStart
     , setPriorities
     , typeTo
     )
@@ -926,17 +927,13 @@ setEfficiency rules =
         efficiencies
 
 
-setFavoriteKeys : List String -> Rules -> List PrintRule
-setFavoriteKeys keys rules =
-    let
-        containAny ks input =
-            List.any (\k -> String.contains k input) ks
-    in
+setFavorite : (String -> String -> Bool) -> List String -> Rules -> List PrintRule
+setFavorite fun keys rules =
     List.map
         (\rule ->
             { rule
                 | priority =
-                    if containAny keys rule.input then
+                    if List.any (\k -> fun k rule.input) keys then
                         1
 
                     else
@@ -944,6 +941,20 @@ setFavoriteKeys keys rules =
             }
         )
         rules
+
+
+{-| たぶんs/c, j/z, k/c, f/h, t/cと、sy,shのy/hで使う
+-}
+setFavoriteKeys : List String -> Rules -> List PrintRule
+setFavoriteKeys keys rules =
+    setFavorite String.contains keys rules
+
+
+{-| たぶんx,lから始まるltu,xtuなどの設定に使う
+-}
+setFavoriteStart : List String -> Rules -> List PrintRule
+setFavoriteStart keys rules =
+    setFavorite String.startsWith keys rules
 
 
 getPower : Int -> Int
@@ -1044,6 +1055,8 @@ makeRomaji (Data data) =
         |> Maybe.map (\fd -> getHistory fd)
 
 
+{-| 優先度の頭がないかチェックするために使う(手動で目視)
+-}
 getSamePriority : Rules -> Rules
 getSamePriority rules =
     case rules of
@@ -1052,18 +1065,27 @@ getSamePriority rules =
 
         x :: xs ->
             let
-                ( hit, non ) =
-                    List.partition
-                        (\r ->
-                            x.priority == r.priority && x.output == r.output
-                        )
-                        xs
-            in
-            if hit == [] then
-                getSamePriority xs
+                ( same1, non ) =
+                    List.partition (\r -> x.output == r.output) rules
 
-            else
-                x :: hit ++ getSamePriority non
+                same2 =
+                    List.sortBy .priority same1
+                        |> List.reverse
+            in
+            case same2 of
+                [] ->
+                    getSamePriority xs
+
+                s :: ss ->
+                    let
+                        same3 =
+                            List.filter (\r -> s.priority == r.priority) ss
+                    in
+                    if same3 == [] then
+                        getSamePriority non
+
+                    else
+                        s :: same3 ++ getSamePriority non
 
 
 
@@ -1090,42 +1112,28 @@ getSamePriority rules =
 --         |> Debug.log "rules:"
 -- hoge =
 --     let
---         sf : Rule -> Rule -> Order
---         sf a b =
---             compare b.priority a.priority
---         -- _ =
---         -- setPriorities defaultPriorities romanTable
---         --     |> insertLowPriorities (setEfficiency romanTable)
---         --     |> debugRules
---         _ =
+--         myRules =
 --             romanTable
---                 |> insertLowPriorities (setFavoriteKeys [ "s", "j" ] romanTable)
---                 -- |> debugRules
---                 |> newData "ちょ"
---                 |> typeTo "c"
---                 |> makeRomaji
---                 |> Debug.log "romaji"
+--                 |> setPriorities
+--                     [ PrintRule "n" "ん" 3
+--                     , PrintRule "xn" "ん" 2
+--                     , PrintRule "nn" "ん" 1
+--                     ]
+--                 |> insertLowPriorities (setEfficiency romanTable)
+--                 |> insertLowPriorities
+--                     (setFavoriteKeys [ "s", "j", "k", "f", "t" ]
+--                         romanTable
+--                     )
+--                 |> insertLowPriorities
+--                     (setFavoriteKeys [ "y" ]
+--                         romanTable
+--                     )
+--                 |> insertLowPriorities
+--                     (setFavoriteStart [ "l" ]
+--                         romanTable
+--                     )
+--         _ =
+--             getSamePriority myRules
+--                 |> Debug.log "same priority"
 --     in
 --     "hoge"
-
-
-hoge =
-    let
-        myRules =
-            romanTable
-                |> setPriorities
-                    [ PrintRule "n" "ん" 3
-                    , PrintRule "xn" "ん" 2
-                    , PrintRule "nn" "ん" 1
-                    ]
-                |> insertLowPriorities (setEfficiency romanTable)
-                |> insertLowPriorities
-                    (setFavoriteKeys [ "s", "j", "k", "sy" ]
-                        romanTable
-                    )
-
-        _ =
-            getSamePriority myRules
-                |> Debug.log "same priority"
-    in
-    "hoge"

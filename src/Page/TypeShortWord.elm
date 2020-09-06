@@ -249,7 +249,15 @@ initCustomTypingWords words =
                     ]
                 |> Typing.insertLowPriorities (Typing.setEfficiency Typing.romanTable)
                 |> Typing.insertLowPriorities
-                    (Typing.setFavoriteKeys [ "s", "j", "k", "sy" ]
+                    (Typing.setFavoriteKeys [ "s", "j", "k", "f", "t" ]
+                        Typing.romanTable
+                    )
+                |> Typing.insertLowPriorities
+                    (Typing.setFavoriteKeys [ "y" ]
+                        Typing.romanTable
+                    )
+                |> Typing.insertLowPriorities
+                    (Typing.setFavoriteStart [ "l" ]
                         Typing.romanTable
                     )
 

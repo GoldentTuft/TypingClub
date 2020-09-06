@@ -71,10 +71,17 @@ testMakeRomaji =
     let
         myRules1 =
             Typing.romanTable
-                -- |> Typing.setPriorities Typing.defaultPriorities
                 |> Typing.insertLowPriorities (Typing.setEfficiency Typing.romanTable)
                 |> Typing.insertLowPriorities
-                    (Typing.setFavoriteKeys [ "s", "j", "k", "sy" ]
+                    (Typing.setFavoriteKeys [ "s", "j", "k", "f", "t" ]
+                        Typing.romanTable
+                    )
+                |> Typing.insertLowPriorities
+                    (Typing.setFavoriteKeys [ "y" ]
+                        Typing.romanTable
+                    )
+                |> Typing.insertLowPriorities
+                    (Typing.setFavoriteStart [ "l" ]
                         Typing.romanTable
                     )
 
@@ -97,7 +104,7 @@ testMakeRomaji =
             , MakeRomajiTestData myRules1 "しゃかいじん" "" (Just "syakaijinn")
             , MakeRomajiTestData myRules1 "ぷろぐらみんぐげんご" "pur" (Just "oguramingugengo")
             , MakeRomajiTestData myRules1 "ちょこれーと" "" (Just "tyokore-to")
-            , MakeRomajiTestData myRules1 "ちょこれーと" "c" (Just "hokore-to")
+            , MakeRomajiTestData myRules1 "ちょこれーと" "c" (Just "yokore-to")
             , MakeRomajiTestData myRules1 "えんでぃんぐ" "" (Just "endhingu")
             , MakeRomajiTestData myRules1 "てんになる" "" (Just "tennninaru")
             , MakeRomajiTestData myRules1 "いっそ" "" (Just "isso")
@@ -110,7 +117,7 @@ testMakeRomaji =
             , MakeRomajiTestData myRules2 "んあ" "n" (Just "na")
             , MakeRomajiTestData myRules2 "んか" "" (Just "nka")
             , MakeRomajiTestData myRules2 "じゃんけんじゃん" "" (Just "jankenjaxn")
-            , MakeRomajiTestData myRules1 "ゃんけんじゃん" "" (Just "xyankenjann")
+            , MakeRomajiTestData myRules1 "ゃんけんじゃん" "" (Just "lyankenjann")
             , MakeRomajiTestData myRules2 "じゃ" "ji" (Just "xya")
             , MakeRomajiTestData myRules2 "んかんあ" "" (Just "nkaxna")
             , MakeRomajiTestData myRules2 "んけん" "" (Just "nkexn")
