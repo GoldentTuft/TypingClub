@@ -8,6 +8,7 @@ module Typing2 exposing
     , getHistory
     , getRest
     , getState
+    , hoge
     , insertLowPriorities
     , makeRomaji
     , newData
@@ -139,7 +140,6 @@ romanTable =
     , Rule "pyo" "ぴょ" 0
     , Rule "fa" "ふぁ" 0
     , Rule "fi" "ふぃ" 0
-    , Rule "fu" "ふ" 0
     , Rule "fe" "ふぇ" 0
     , Rule "fo" "ふぉ" 0
     , Rule "fya" "ふゃ" 0
@@ -459,7 +459,6 @@ romanTable =
     , Rule "hho" "っほ" 0
     , Rule "ffa" "っふぁ" 0
     , Rule "ffi" "っふぃ" 0
-    , Rule "ffu" "っふ" 0
     , Rule "ffe" "っふぇ" 0
     , Rule "ffo" "っふぉ" 0
     , Rule "ffya" "っふゃ" 0
@@ -1045,6 +1044,28 @@ makeRomaji (Data data) =
         |> Maybe.map (\fd -> getHistory fd)
 
 
+getSamePriority : Rules -> Rules
+getSamePriority rules =
+    case rules of
+        [] ->
+            []
+
+        x :: xs ->
+            let
+                ( hit, non ) =
+                    List.partition
+                        (\r ->
+                            x.priority == r.priority && x.output == r.output
+                        )
+                        xs
+            in
+            if hit == [] then
+                getSamePriority xs
+
+            else
+                x :: hit ++ getSamePriority non
+
+
 
 -- debugData (Data data) =
 --     { fixedWords = data.fixedWords
@@ -1079,10 +1100,32 @@ makeRomaji (Data data) =
 --         _ =
 --             romanTable
 --                 |> insertLowPriorities (setFavoriteKeys [ "s", "j" ] romanTable)
---                 |> debugRules
---         -- |> newData "ちょ"
---         -- |> typeTo "c"
---         -- |> makeRomaji
---         -- |> Debug.log "romaji"
+--                 -- |> debugRules
+--                 |> newData "ちょ"
+--                 |> typeTo "c"
+--                 |> makeRomaji
+--                 |> Debug.log "romaji"
 --     in
 --     "hoge"
+
+
+hoge =
+    let
+        myRules =
+            romanTable
+                |> setPriorities
+                    [ PrintRule "n" "ん" 3
+                    , PrintRule "xn" "ん" 2
+                    , PrintRule "nn" "ん" 1
+                    ]
+                |> insertLowPriorities (setEfficiency romanTable)
+                |> insertLowPriorities
+                    (setFavoriteKeys [ "s", "j", "k", "sy" ]
+                        romanTable
+                    )
+
+        _ =
+            getSamePriority myRules
+                |> Debug.log "same priority"
+    in
+    "hoge"

@@ -125,7 +125,6 @@ pye	ぴぇ
 pyo	ぴょ
 fa	ふぁ
 fi	ふぃ
-fu	ふ
 fe	ふぇ
 fo	ふぉ
 fya	ふゃ
