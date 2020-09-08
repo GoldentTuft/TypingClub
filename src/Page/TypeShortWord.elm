@@ -247,19 +247,7 @@ initCustomTypingWords words =
                     , Typing.PrintRule "xn" "ん" 2
                     , Typing.PrintRule "nn" "ん" 1
                     ]
-                |> Typing.insertLowPriorities (Typing.setEfficiency Typing.romanTable)
-                |> Typing.insertLowPriorities
-                    (Typing.setFavoriteKeys [ "s", "j", "k", "f", "t" ]
-                        Typing.romanTable
-                    )
-                |> Typing.insertLowPriorities
-                    (Typing.setFavoriteKeys [ "y" ]
-                        Typing.romanTable
-                    )
-                |> Typing.insertLowPriorities
-                    (Typing.setFavoriteStart [ "l" ]
-                        Typing.romanTable
-                    )
+                |> Typing.insertLowPriorities (Typing.defaultPriorities Typing.romanTable)
 
         fun ( i, d ) =
             { index = i

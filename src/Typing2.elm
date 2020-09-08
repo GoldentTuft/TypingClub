@@ -805,63 +805,30 @@ type alias PrintRule =
     }
 
 
-defaultPriorities : List PrintRule
-defaultPriorities =
-    [ PrintRule "ji" "じ" 1
-    , PrintRule "fu" "ふ" 1
-    , PrintRule "ti" "ち" 1
-    , PrintRule "si" "し" 2
-    , PrintRule "shi" "し" 1
-    , PrintRule "tu" "つ" 1
-    , PrintRule "n" "ん" 2
-    , PrintRule "nn" "ん" 1
-    , PrintRule "sya" "しゃ" 4
-    , PrintRule "syi" "しぃ" 4
-    , PrintRule "syu" "しゅ" 4
-    , PrintRule "sye" "しぇ" 4
-    , PrintRule "syo" "しょ" 4
-    , PrintRule "sha" "しゃ" 3
-    , PrintRule "shu" "しゅ" 3
-    , PrintRule "she" "しぇ" 3
-    , PrintRule "sho" "しょ" 3
-    , PrintRule "tya" "ちゃ" 4
-    , PrintRule "tyi" "ちぃ" 4
-    , PrintRule "tyu" "ちゅ" 4
-    , PrintRule "tye" "ちぇ" 4
-    , PrintRule "tyo" "ちょ" 4
-    , PrintRule "cha" "ちゃ" 3
-    , PrintRule "chu" "ちゅ" 3
-    , PrintRule "che" "ちぇ" 3
-    , PrintRule "cho" "ちょ" 3
-    , PrintRule "cya" "ちゃ" 2
-    , PrintRule "cyi" "ちぃ" 2
-    , PrintRule "cyu" "ちゅ" 2
-    , PrintRule "cye" "ちぇ" 2
-    , PrintRule "cyo" "ちょ" 2
-    , PrintRule "ja" "じゃ" 4
-    , PrintRule "jyi" "じぃ" 4
-    , PrintRule "ju" "じゅ" 4
-    , PrintRule "je" "じぇ" 4
-    , PrintRule "jo" "じょ" 4
-    , PrintRule "zya" "じゃ" 3
-    , PrintRule "zyi" "じぃ" 3
-    , PrintRule "zyu" "じゅ" 3
-    , PrintRule "zye" "じぇ" 3
-    , PrintRule "zyo" "じょ" 3
-    , PrintRule "jya" "じゃ" 2
-    , PrintRule "jyi" "じぃ" 2
-    , PrintRule "jyu" "じゅ" 2
-    , PrintRule "jye" "じぇ" 2
-    , PrintRule "jyo" "じょ" 2
-    , PrintRule "ka" "か" 1
-
-    --苦肉の策。あとでコスパによる優先度設定はするかもしれない。
-    --文字列による並び替えで優先度設定も。いつか。
-    -- , PrintRule "ltu" "っ" -1
-    -- , PrintRule "xtu" "っ" -2
-    -- , PrintRule "ltsu" "っ" -3
-    -- , PrintRule "xtsu" "っ" -4
-    ]
+defaultPriorities : Rules -> Rules
+defaultPriorities rules =
+    rules
+        |> insertLowPriorities
+            [ PrintRule "n" "ん" 3
+            , PrintRule "nn" "ん" 2
+            , PrintRule "xn" "ん" 1
+            ]
+        -- chiなど下がる 指定したければsetEfficiencyよりも上に
+        |> insertLowPriorities (setEfficiency romanTable)
+        |> insertLowPriorities
+            (setFavoriteKeys [ "sy", "j", "k", "f", "ty", "si", "se" ]
+                romanTable
+            )
+        -- ty > cy > ch
+        |> insertLowPriorities
+            (setFavoriteKeys [ "cy" ]
+                romanTable
+            )
+        -- ltu/xtuやla/xaなど
+        |> insertLowPriorities
+            (setFavoriteStart [ "l" ]
+                romanTable
+            )
 
 
 getPriority : Rule -> List PrintRule -> Int
@@ -959,20 +926,18 @@ setFavoriteStart keys rules =
 
 getPower : Int -> Int
 getPower max =
-    if max < 10 then
-        10
+    let
+        f m p =
+            if m < p then
+                p
 
-    else if max < 100 then
-        100
+            else if m > 10000000 then
+                1
 
-    else if max < 1000 then
-        1000
-
-    else if max < 10000 then
-        10000
-
-    else
-        1
+            else
+                f m (p * 10)
+    in
+    f max 10
 
 
 insertLowPriorities : List PrintRule -> Rules -> Rules
@@ -1119,21 +1084,11 @@ getSamePriority rules =
 --                     , PrintRule "xn" "ん" 2
 --                     , PrintRule "nn" "ん" 1
 --                     ]
---                 |> insertLowPriorities (setEfficiency romanTable)
---                 |> insertLowPriorities
---                     (setFavoriteKeys [ "s", "j", "k", "f", "t" ]
---                         romanTable
---                     )
---                 |> insertLowPriorities
---                     (setFavoriteKeys [ "y" ]
---                         romanTable
---                     )
---                 |> insertLowPriorities
---                     (setFavoriteStart [ "l" ]
---                         romanTable
---                     )
+--                 -- |> Debug.log "***rules***"
+--                 |> insertLowPriorities (defaultPriorities romanTable)
+--         -- |> Debug.log "***rules***"
 --         _ =
 --             getSamePriority myRules
 --                 |> Debug.log "same priority"
 --     in
---     "hoge"
+--     ()

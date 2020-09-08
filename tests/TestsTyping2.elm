@@ -70,20 +70,7 @@ testMakeRomaji : Test
 testMakeRomaji =
     let
         myRules1 =
-            Typing.romanTable
-                |> Typing.insertLowPriorities (Typing.setEfficiency Typing.romanTable)
-                |> Typing.insertLowPriorities
-                    (Typing.setFavoriteKeys [ "s", "j", "k", "f", "t" ]
-                        Typing.romanTable
-                    )
-                |> Typing.insertLowPriorities
-                    (Typing.setFavoriteKeys [ "y" ]
-                        Typing.romanTable
-                    )
-                |> Typing.insertLowPriorities
-                    (Typing.setFavoriteStart [ "l" ]
-                        Typing.romanTable
-                    )
+            Typing.defaultPriorities Typing.romanTable
 
         myRules2 =
             Typing.romanTable
@@ -91,9 +78,8 @@ testMakeRomaji =
                     [ Typing.PrintRule "n" "ん" 3
                     , Typing.PrintRule "xn" "ん" 2
                     , Typing.PrintRule "nn" "ん" 1
-                    , Typing.PrintRule "ja" "じゃ" 3
                     ]
-                |> Typing.insertLowPriorities (Typing.setEfficiency Typing.romanTable)
+                |> Typing.insertLowPriorities (Typing.defaultPriorities Typing.romanTable)
 
         testList =
             [ MakeRomajiTestData myRules1 "あいうえお" "" (Just "aiueo")
@@ -113,12 +99,13 @@ testMakeRomaji =
             , MakeRomajiTestData myRules1 "っく" "" (Just "kku")
             , MakeRomajiTestData myRules1 "うぃるす" "" (Just "wirusu")
             , MakeRomajiTestData myRules1 "ろんよりしょうこ" "" (Just "ronnyorisyouko")
+            , MakeRomajiTestData myRules1 "くぉーと" "" (Just "qo-to")
             , MakeRomajiTestData myRules2 "んあ" "" (Just "xna")
             , MakeRomajiTestData myRules2 "んあ" "n" (Just "na")
             , MakeRomajiTestData myRules2 "んか" "" (Just "nka")
             , MakeRomajiTestData myRules2 "じゃんけんじゃん" "" (Just "jankenjaxn")
             , MakeRomajiTestData myRules1 "ゃんけんじゃん" "" (Just "lyankenjann")
-            , MakeRomajiTestData myRules2 "じゃ" "ji" (Just "xya")
+            , MakeRomajiTestData myRules2 "じゃ" "ji" (Just "lya")
             , MakeRomajiTestData myRules2 "んかんあ" "" (Just "nkaxna")
             , MakeRomajiTestData myRules2 "んけん" "" (Just "nkexn")
             , MakeRomajiTestData myRules2 "んけん" "n" (Just "kexn")
