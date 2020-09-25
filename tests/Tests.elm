@@ -2,7 +2,7 @@ module Tests exposing (all)
 
 import Expect
 import Test exposing (..)
-import Typing
+import Typing1 as Typing
 
 
 

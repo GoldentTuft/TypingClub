@@ -13,7 +13,7 @@ import Json.Encode as E
 import Round
 import Task
 import Time
-import Typing
+import Typing1 as Typing
 import Url exposing (Url)
 import Url.Builder
 import Url.Parser exposing ((</>), (<?>), Parser, map, oneOf, s, top)

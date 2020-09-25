@@ -1,4 +1,4 @@
-module Typing exposing (Data, Rule, State, newData, nextData, romanTable, typeTo)
+module Typing1 exposing (Data, Rule, State, newData, nextData, romanTable, typeTo)
 
 
 type alias Rule =

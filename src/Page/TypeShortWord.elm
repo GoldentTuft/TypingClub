@@ -19,7 +19,7 @@ import Random.List as RandomList
 import Round
 import Task
 import Time
-import Typing2 as Typing
+import Typing
 import Url exposing (Url)
 import Url.Builder
 import Url.Parser exposing ((</>), (<?>), Parser, map, oneOf, s, top)
